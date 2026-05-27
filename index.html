@@ -871,10 +871,10 @@
                     onBlur={()=>setTimeout(()=>setSuggestions([]),150)}
                     style={{ width:"100%" }} />
                   {suggestions.length>0 && (
-                    <div style={{ position:"absolute", top:"100%", left:0, right:0, zIndex:50, background:th.glassHeavy, border:`1px solid ${th.glassBorder}`, borderRadius:"0 0 12px 12px", overflow:"hidden", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", boxShadow:th.glassShadow }}>
+                    <div style={{ position:"absolute", top:"100%", left:0, right:0, zIndex:50, background:th.text==="#E8E4DC"?"#1a1a24":"#ffffff", border:`1px solid ${th.divider}`, borderRadius:"0 0 12px 12px", overflow:"hidden", boxShadow:"0 8px 24px rgba(0,0,0,0.3)" }}>
                       {suggestions.map(s=>(
                         <button key={s} onMouseDown={()=>{ setNewExName(s); setSuggestions([]); }} style={{ width:"100%", background:"none", border:"none", borderBottom:`1px solid ${th.divider}`, color:th.text, padding:"10px 14px", cursor:"pointer", textAlign:"left", fontSize:13, fontWeight:500, transition:"background 0.15s" }}
-                          onMouseEnter={e=>e.target.style.background=th.accentBg} onMouseLeave={e=>e.target.style.background="none"}>
+                          onMouseEnter={e=>e.target.style.background=th.accentBg} onMouseLeave={e=>e.target.style.background="transparent"}>
                           {s}
                         </button>
                       ))}
