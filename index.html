@@ -625,9 +625,32 @@
                 </div>
               );
             })}
+            {/* Note */}
+            <div style={{ padding:"12px 20px", borderTop:`1px solid ${th.divider}`, background:th.pillBg }}>
+              <p style={{ color:th.textSec, fontSize:12 }}>📌 {lang==="tr"?prog.meta.note_tr:prog.meta.note_en}</p>
+            </div>
           </div>
         )}
 
+        {/* Kayıtlı programlar */}
+        {savedProgs && savedProgs.length > 0 && (
+          <div style={{ marginTop:16 }}>
+            <p style={{ color:th.textMuted, fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:10 }}>{t.savedPrograms}</p>
+            {savedProgs.map((sp, i) => (
+              <div key={i} className="glass" style={{ background:th.glass, border:`1px solid ${th.glassBorder}`, borderRadius:14, padding:"14px 18px", marginBottom:8, backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div>
+                  <p style={{ color:th.text, fontWeight:600, fontSize:14, marginBottom:3 }}>{sp.name}</p>
+                  <p style={{ color:th.textSec, fontSize:12 }}>{Object.keys(sp.program).length} {lang==="tr"?"gün":"days"} · <span style={{ background:th.accentBg, color:th.accent, fontSize:10, fontWeight:700, padding:"1px 7px", borderRadius:20 }}>{t.myBadge}</span></p>
+                </div>
+                <div style={{ display:"flex", gap:8 }}>
+                  <button onClick={()=>onDeleteSaved(i)} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textMuted, padding:"6px 10px", cursor:"pointer", borderRadius:10, fontSize:14, transition:"all 0.2s" }}
+                    onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textMuted;}}>×</button>
+                  <button onClick={()=>onUseProgram(sp.program)} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"7px 14px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:10, boxShadow:`0 3px 10px ${th.accentGlow}` }}>{t.use}</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
