@@ -532,7 +532,7 @@
   }
 
   // ── PROGRAMS VIEW ──
-  function ProgramsView({ th, t, onUseProgram }) {
+  function ProgramsView({ th, t, lang, onUseProgram }) {
     const [expandedDay, setExpandedDay] = useState(null);
     const prog = GURAY_PROGRAM_FULL;
 
@@ -578,7 +578,7 @@
                 boxShadow: expandedDay===i?`0 3px 10px ${th.accentGlow}`:"none",
                 backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)",
               }}>
-                {d.day.charAt(0)+d.day.slice(1).toLowerCase()}
+                {t.days[d.day]||d.day}
               </button>
             ))}
           </div>
@@ -651,7 +651,7 @@
           borderRadius:14, padding:"12px 16px",
           backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)"
         }}>
-          <p style={{ color:th.textSec, fontSize:12, fontWeight:500 }}>{prog.meta.note}</p>
+          <p style={{ color:th.textSec, fontSize:12, fontWeight:500 }}>{lang==="tr"?prog.meta.note_tr:prog.meta.note_en}</p>
         </div>
       </div>
     );
@@ -793,7 +793,7 @@
           ))}
         </div>
 
-        {subTab==="programs" && <ProgramsView th={th} t={t} onUseProgram={handleUseGuray} />}
+        {subTab==="programs" && <ProgramsView th={th} t={t} lang={lang} onUseProgram={handleUseGuray} />}
 
         {subTab==="mine" && <div>
         <GlassCard th={th}>
@@ -985,12 +985,13 @@
     const [userProgram, setUserProgram] = useState(null);
     const [view, setView] = useState("log");
     const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-    const [programDay, setProgramDay] = useState("PAZARTESİ");
+    const [programDay, setProgramDay] = useState(()=>DATE_TO_DAY[new Date().getDay()]);
     const [exercise, setExercise] = useState("");
     const [newCustomEx, setNewCustomEx] = useState("");
     const [customExDay, setCustomExDay] = useState("PAZARTESİ");
     const [sets, setSets] = useState([{ weight:"", reps:"", rir:"" }]);
     const [savedAnim, setSavedAnim] = useState(false);
+    const [overrideDay, setOverrideDay] = useState(false);
     const [expanded, setExpanded] = useState({});
     const [filterEx, setFilterEx] = useState("all");
     const [loading, setLoading] = useState(false);
