@@ -735,7 +735,7 @@
   }
 
   // ── PROGRAM VIEW ──
-  function ProgramView({ session, customExList, setCustomExList, userProgram, setUserProgram, th, t }) {
+  function ProgramView({ session, customExList, setCustomExList, userProgram, setUserProgram, th, t, lang }) {
     const [subTab, setSubTab] = useState("programs");
     const [editProgram, setEditProgram] = useState(userProgram || {});
     const [selectedDay, setSelectedDay] = useState("PAZARTESİ");
@@ -1356,7 +1356,7 @@
               </div>
             )}
 
-            {view==="program" && <ProgramView session={session} customExList={customExList} setCustomExList={setCustomExList} userProgram={userProgram} setUserProgram={setUserProgram} th={th} t={t} />}
+            {view==="program" && <ProgramView session={session} customExList={customExList} setCustomExList={setCustomExList} userProgram={userProgram} setUserProgram={setUserProgram} th={th} t={t} lang={lang} />}
             {view==="settings" && <SettingsView session={session} themeName={themeName} setThemeName={setThemeName} lang={lang} setLang={setLang} th={th} t={t} />}
           </div>
         </div>
