@@ -252,7 +252,7 @@
       deleteConfirm:"Onaylamak için \"DELETE\" yaz:", deleteType:"DELETE",
       deleteBtn:"Kalıcı Olarak Sil", deleting:"Siliniyor...", back:"← Geri",
       rememberMe:"Beni hatırla", changeDay:"Farklı gün seç", autoDay:"otomatik",
-      presetPrograms:"Hazır Programlar", communityPrograms:"Topluluk Programları",
+      presetPrograms:"Hazır Programlar", communityPrograms:"Topluluk Programları", presetProgram:"HAZIR PROGRAM", useProgram:"Bu Programı Kullan",
       saveProgram2:"Programı Paylaş", programNamePh:"ör. Güç Programı", programNameLabel:"Program Adı",
       shareSuccess:"✓ Program paylaşıldı!", confirmDelete:"Bu programı silmek istiyor musun?",
       newPassword:"Yeni Şifre", newPasswordRepeat:"Şifre Tekrar",
@@ -292,7 +292,7 @@
       deleteConfirm:"Type \"DELETE\" to confirm:", deleteType:"DELETE",
       deleteBtn:"Permanently Delete", deleting:"Deleting...", back:"← Back",
       rememberMe:"Remember me", changeDay:"Change day", autoDay:"auto",
-      presetPrograms:"Preset Programs", communityPrograms:"Community Programs",
+      presetPrograms:"Preset Programs", communityPrograms:"Community Programs", presetProgram:"PRESET PROGRAM", useProgram:"Use This Program",
       saveProgram2:"Share Program", programNamePh:"e.g. Strength Program", programNameLabel:"Program Name",
       shareSuccess:"✓ Program shared!", confirmDelete:"Do you want to delete this program?",
       newPassword:"New Password", newPasswordRepeat:"Repeat Password",
@@ -545,280 +545,95 @@
   }
 
   // ── PROGRAMS VIEW ──
-  function ProgramsView({ th, t, lang, session, onUseProgram }) {
-    const [subTab, setSubTab] = useState("preset");
+  function ProgramsView({ th, t, lang, onUseProgram }) {
     const [expandedDay, setExpandedDay] = useState(null);
-    const [communityProgs, setCommunityProgs] = useState([]);
-    const [loadingProgs, setLoadingProgs] = useState(false);
-    const [expandedCommunity, setExpandedCommunity] = useState(null);
     const prog = GURAY_PROGRAM_FULL;
-
-    useEffect(() => {
-      if (subTab === "community") fetchCommunityProgs();
-    }, [subTab]);
-
-    async function fetchCommunityProgs() {
-      setLoadingProgs(true);
-      const { data } = await sb.from("community_programs").select("*").order("created_at", { ascending:false });
-      if (data) setCommunityProgs(data);
-      setLoadingProgs(false);
-    }
-
-    async function deleteProgram(id) {
-      if (!window.confirm(t.confirmDelete)) return;
-      await sb.from("community_programs").delete().eq("id", id);
-      setCommunityProgs(prev => prev.filter(p => p.id !== id));
-    }
 
     const focusColor = (focus) => {
       if (focus.includes("Göğüs")) return "#E84430";
-      if (focus.includes("Sırt")) return "#3B82F6";
-      if (focus.includes("Bacak")) return "#10B981";
+      if (focus.includes("Sırt") || focus.includes("Back")) return "#3B82F6";
+      if (focus.includes("Bacak") || focus.includes("Leg")) return "#10B981";
       return th.accent;
     };
 
     return (
       <div style={{ maxWidth:520 }}>
-        {/* Sub tabs */}
-        <div style={{ display:"flex", background:th.pillBg, borderRadius:14, padding:3, marginBottom:16, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
-          {[["preset",t.presetPrograms],["community",t.communityPrograms]].map(([k,lb])=>(
-            <button key={k} onClick={()=>setSubTab(k)} style={{ flex:1, background:subTab===k?th.glass:"transparent", border:`1px solid ${subTab===k?th.glassBorder:"transparent"}`, color:subTab===k?th.text:th.textSec, fontSize:13, fontWeight:subTab===k?700:500, padding:"10px", cursor:"pointer", borderRadius:12, backdropFilter:subTab===k?"blur(12px)":"none", WebkitBackdropFilter:subTab===k?"blur(12px)":"none", transition:"all 0.2s", boxShadow:subTab===k?th.glassShadow:"none" }}>{lb}</button>
-          ))}
-        </div>
-
-        {subTab==="preset" && <>
-        {/* Program header card */}
-        <div className="glass" style={{
-          background: `linear-gradient(135deg, ${th.accentBg}, ${th.glass})`,
-          border:`1px solid ${th.accentBorder}`,
-          borderRadius:20, padding:"22px",
-          backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
-          boxShadow:th.glassShadow, marginBottom:14
-        }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
-            <div>
-              <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>{t.presetProgram}</p>
-              <h2 style={{ color:th.text, fontSize:20, fontWeight:700, letterSpacing:-0.5, marginBottom:4 }}>{prog.meta.name}</h2>
-              <p style={{ color:th.textSec, fontSize:13 }}>{prog.meta.split}</p>
-            </div>
-            <div style={{ background:th.accent, borderRadius:12, padding:"8px 14px", textAlign:"center", flexShrink:0, boxShadow:`0 4px 12px ${th.accentGlow}` }}>
-              <p style={{ color:"#fff", fontSize:22, fontWeight:700, lineHeight:1 }}>{prog.meta.days}</p>
-              <p style={{ color:"rgba(255,255,255,0.7)", fontSize:10, fontWeight:600 }}>{t.days_label}</p>
+        {/* Guray program card */}
+        <button onClick={()=>setExpandedDay(expandedDay===null?0:null)} style={{ width:"100%", background:"none", border:"none", cursor:"pointer", textAlign:"left", padding:0, marginBottom: expandedDay!==null?0:12 }}>
+          <div className="glass" style={{ background:`linear-gradient(135deg, ${th.accentBg}, ${th.glass})`, border:`1px solid ${th.accentBorder}`, borderRadius: expandedDay!==null?"16px 16px 0 0":16, padding:"20px 22px", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", boxShadow:th.glassShadow }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>{t.presetProgram}</p>
+                <h2 style={{ color:th.text, fontSize:18, fontWeight:700, letterSpacing:-0.5, marginBottom:3 }}>{prog.meta.name}</h2>
+                <p style={{ color:th.textSec, fontSize:13 }}>{prog.meta.split}</p>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <div style={{ background:th.accent, borderRadius:12, padding:"8px 12px", textAlign:"center", boxShadow:`0 4px 12px ${th.accentGlow}` }}>
+                  <p style={{ color:"#fff", fontSize:20, fontWeight:700, lineHeight:1 }}>{prog.meta.days}</p>
+                  <p style={{ color:"rgba(255,255,255,0.7)", fontSize:10, fontWeight:600 }}>{t.days_label}</p>
+                </div>
+                <span style={{ color:th.accent, fontSize:22, display:"inline-block", transform:expandedDay!==null?"rotate(90deg)":"rotate(0)", transition:"transform 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}>›</span>
+              </div>
             </div>
           </div>
+        </button>
 
-          {/* Day pills */}
-          <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
-            {prog.days.map((d,i)=>(
-              <button key={i} onClick={()=>setExpandedDay(expandedDay===i?null:i)} style={{
-                background: expandedDay===i ? th.accent : th.pillBg,
-                border:`1px solid ${expandedDay===i?th.accent:th.divider}`,
-                color: expandedDay===i ? "#fff" : th.text,
-                padding:"6px 14px", cursor:"pointer", borderRadius:20,
-                fontSize:12, fontWeight:expandedDay===i?700:500,
-                transition:"all 0.2s",
-                boxShadow: expandedDay===i?`0 3px 10px ${th.accentGlow}`:"none",
-                backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)",
-              }}>
-                {t.days[d.day]||d.day}
+        {/* Days accordion */}
+        {expandedDay !== null && (
+          <div className="glass" style={{ background:th.glass, border:`1px solid ${th.accentBorder}`, borderTop:"none", borderRadius:"0 0 16px 16px", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", boxShadow:th.glassShadow, marginBottom:12, overflow:"hidden" }}>
+            {/* Use button */}
+            <div style={{ padding:"14px 20px", borderBottom:`1px solid ${th.divider}` }}>
+              <button onClick={()=>onUseProgram()} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"11px", width:"100%", cursor:"pointer", fontSize:14, fontWeight:700, borderRadius:12, boxShadow:`0 4px 14px ${th.accentGlow}` }}>
+                {t.useProgram}
               </button>
-            ))}
-          </div>
-
-          <button onClick={()=>onUseProgram()} className="btn-primary" style={{
-            background:th.accent, border:"none", color:"#fff",
-            padding:"12px", width:"100%", cursor:"pointer",
-            fontSize:14, fontWeight:700, borderRadius:12,
-            boxShadow:`0 4px 14px ${th.accentGlow}`
-          }}>
-            {t.useProgram}
-          </button>
-        </div>
-
-        {/* Day detail cards */}
-        {expandedDay !== null && (() => {
-          const d = prog.days[expandedDay];
-          const col = focusColor(d.focus);
-          return (
-            <div className="glass fade-up" style={{
-              background:th.glass, border:`1px solid ${th.glassBorder}`,
-              borderRadius:20, overflow:"hidden",
-              backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
-              boxShadow:th.glassShadow, marginBottom:14
-            }}>
-              {/* Day header */}
-              <div style={{ background:`linear-gradient(135deg, ${col}18, ${col}08)`, borderBottom:`1px solid ${th.divider}`, padding:"16px 20px" }}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                  <div>
-                    <p style={{ color:col, fontSize:11, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:4 }}>{t.days[d.day]||d.day}</p>
-                    <p style={{ color:th.text, fontSize:16, fontWeight:600 }}>{t.focus[d.focus]||d.focus}</p>
-                  </div>
-                  <span style={{ background:`${col}20`, color:col, fontSize:12, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>
-                    {d.exercises.length} hareket
-                  </span>
-                </div>
-              </div>
-
-              {/* Exercises */}
-              {d.exercises.map((ex,i)=>(
-                <div key={i} style={{
-                  display:"flex", justifyContent:"space-between", alignItems:"center",
-                  padding:"13px 20px",
-                  borderBottom: i<d.exercises.length-1?`1px solid ${th.divider}`:"none",
-                  background: i%2===0?"transparent":th.pillBg,
-                }}>
-                  <div style={{ flex:1, paddingRight:12 }}>
-                    <p style={{ color:th.text, fontSize:14, fontWeight:500, marginBottom: ex.note?3:0 }}>{ex.name}</p>
-                    {ex.note && <span style={{ background:`${col}15`, color:col, fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:20, letterSpacing:0.5 }}>{ex.note}</span>}
-                  </div>
-                  <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
-                    <span style={{ background:th.tagBg, border:`1px solid ${th.tagBorder}`, color:th.text, fontSize:12, fontWeight:700, padding:"4px 10px", borderRadius:20, whiteSpace:"nowrap" }}>
-                      {ex.sets}×{ex.reps}
-                    </span>
-                    <span style={{ background:ex.intensity==="Failure"?(col+"15"):th.accentBg, border:"1px solid " + (ex.intensity==="Failure"?(col+"30"):th.accentBorder), color:ex.intensity==="Failure"?col:th.accent, fontSize:11, fontWeight:600, padding:"4px 10px", borderRadius:20, whiteSpace:"nowrap" }}>
-                      {ex.intensity}
-                    </span>
-                  </div>
-                </div>
-              ))}
-
-              {/* Note if any */}
             </div>
-          );
-        })()}
 
-        {/* Bottom note */}
-        <div className="glass" style={{
-          background:th.pillBg, border:`1px solid ${th.divider}`,
-          borderRadius:14, padding:"12px 16px",
-          backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)"
-        }}>
-          <p style={{ color:th.textSec, fontSize:12, fontWeight:500 }}>{lang==="tr"?prog.meta.note_tr:prog.meta.note_en}</p>
-        </div>
-        </>}
-
-        {subTab==="community" && (
-          <div>
-            {loadingProgs ? (
-              <div style={{ textAlign:"center", padding:40, color:th.textMuted }}>...</div>
-            ) : communityProgs.length === 0 ? (
-              <div style={{ textAlign:"center", padding:60 }}>
-                <p style={{ fontSize:36, marginBottom:12 }}>📋</p>
-                <p style={{ color:th.textMuted, fontSize:14 }}>{lang==="tr"?"Henüz paylaşılan program yok":"No shared programs yet"}</p>
-              </div>
-            ) : communityProgs.map((p, i) => (
-              <div key={p.id} className="glass" style={{ background:th.glass, border:`1px solid ${th.glassBorder}`, borderRadius:16, overflow:"hidden", marginBottom:12, backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", boxShadow:th.glassShadow }}>
-                <button onClick={()=>setExpandedCommunity(expandedCommunity===p.id?null:p.id)} style={{ width:"100%", background:"none", border:"none", padding:"16px 18px", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", textAlign:"left" }}>
-                  <div>
-                    <p style={{ color:th.text, fontWeight:700, fontSize:15, marginBottom:3 }}>{p.program_name}</p>
-                    <p style={{ color:th.textSec, fontSize:12 }}>@{p.username} · {Object.keys(p.program).length} {lang==="tr"?"gün":"days"}</p>
-                  </div>
-                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                    {p.user_id === session?.user?.id && (
-                      <button onClick={e=>{e.stopPropagation();deleteProgram(p.id);}} style={{ background:"none", border:`1px solid ${th.divider}`, color:th.textMuted, padding:"4px 10px", cursor:"pointer", borderRadius:20, fontSize:12, transition:"all 0.2s" }}
-                        onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textMuted;}}>×</button>
-                    )}
-                    <button onClick={e=>{e.stopPropagation();onUseProgram(p.program);}} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"6px 14px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:20, boxShadow:`0 3px 10px ${th.accentGlow}` }}>{t.use}</button>
-                    <span style={{ color:expandedCommunity===p.id?th.accent:th.textMuted, fontSize:20, display:"inline-block", transform:expandedCommunity===p.id?"rotate(90deg)":"rotate(0)", transition:"transform 0.2s" }}>›</span>
-                  </div>
-                </button>
-                {expandedCommunity===p.id && (
-                  <div style={{ borderTop:`1px solid ${th.divider}`, padding:"12px 18px", background:th.pillBg }}>
-                    {Object.entries(p.program).map(([day, exs]) => (
-                      <div key={day} style={{ marginBottom:10 }}>
-                        <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:6 }}>{t.days[day]||day}</p>
-                        <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
-                          {exs.map(ex => <span key={ex} style={{ background:th.tagBg, border:`1px solid ${th.tagBorder}`, padding:"3px 10px", fontSize:12, borderRadius:20, color:th.text }}>{ex}</span>)}
+            {/* Day rows */}
+            {prog.days.map((d,i)=>{
+              const col = focusColor(d.focus);
+              const isOpen = expandedDay === i+1;
+              return (
+                <div key={i}>
+                  <button onClick={()=>setExpandedDay(isOpen?0:i+1)} style={{ width:"100%", background:"none", border:"none", padding:"14px 20px", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", borderTop:`1px solid ${th.divider}`, textAlign:"left" }}>
+                    <div>
+                      <p style={{ color:col, fontSize:11, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>{t.days[d.day]||d.day}</p>
+                      <p style={{ color:th.text, fontSize:14, fontWeight:600 }}>{t.focus[d.focus]||d.focus}</p>
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{ background:`${col}20`, color:col, fontSize:11, fontWeight:700, padding:"3px 10px", borderRadius:20 }}>{d.exercises.length}</span>
+                      <span style={{ color:isOpen?col:th.textMuted, fontSize:18, display:"inline-block", transform:isOpen?"rotate(90deg)":"rotate(0)", transition:"transform 0.2s" }}>›</span>
+                    </div>
+                  </button>
+                  {isOpen && (
+                    <div style={{ background:th.pillBg, padding:"0 20px 12px" }}>
+                      {d.exercises.map((ex,j)=>(
+                        <div key={j} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 0", borderBottom:j<d.exercises.length-1?`1px solid ${th.divider}`:"none" }}>
+                          <div>
+                            <p style={{ color:th.text, fontSize:13, fontWeight:500 }}>{ex.name}</p>
+                            {ex.note && <span style={{ background:`${col}15`, color:col, fontSize:10, fontWeight:700, padding:"1px 7px", borderRadius:20 }}>{ex.note}</span>}
+                          </div>
+                          <div style={{ display:"flex", gap:5 }}>
+                            <span style={{ background:th.tagBg, border:`1px solid ${th.tagBorder}`, color:th.text, fontSize:11, fontWeight:700, padding:"3px 9px", borderRadius:20 }}>{ex.sets}×{ex.reps}</span>
+                            <span style={{ background:ex.intensity==="Failure"?`${col}15`:th.accentBg, color:ex.intensity==="Failure"?col:th.accent, fontSize:10, fontWeight:600, padding:"3px 9px", borderRadius:20 }}>{ex.intensity}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
-      </div>
-    );
-  }
 
-  // ── PRIVACY POLICY ──
-  function PrivacyPolicyScreen({ th, t, lang, onBack }) {
-    return (
-      <div style={{ minHeight:"100vh", background:th.bgGrad, position:"relative", overflow:"hidden" }}>
-        <BgOrbs th={th} />
-        <div style={{ position:"relative", zIndex:1, maxWidth:680, margin:"0 auto", padding:"32px 20px 60px" }}>
-          <button onClick={onBack} style={{ background:"none", border:"none", color:th.textSec, fontSize:14, cursor:"pointer", marginBottom:24, padding:0, display:"flex", alignItems:"center", gap:6 }}>← {lang==="tr"?"Geri":"Back"}</button>
-          <div className="glass" style={{ background:th.glass, border:`1px solid ${th.glassBorder}`, borderRadius:20, padding:"28px 28px", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", boxShadow:th.glassShadow }}>
-            <h1 style={{ color:th.text, fontSize:24, fontWeight:700, marginBottom:6 }}>{lang==="tr"?"Gizlilik Politikası":"Privacy Policy"}</h1>
-            <p style={{ color:th.textMuted, fontSize:12, marginBottom:28 }}>{lang==="tr"?"Son güncelleme: Mayıs 2026":"Last updated: May 2026"}</p>
-
-            {(lang==="tr" ? [
-              ["Topladığımız Veriler", "Iron Log uygulaması; kullanıcı adınızı, e-posta adresinizi, antrenman kayıtlarınızı (tarih, egzersiz, set, tekrar, RIR bilgileri) ve kişisel antrenman programınızı toplar. Bu veriler yalnızca uygulamanın işlevselliği için kullanılır."],
-              ["Verilerin Kullanımı", "Topladığımız veriler yalnızca size hizmet sunmak amacıyla kullanılır. Antrenman geçmişiniz, ilerlemenizi takip etmenize yardımcı olur. Verileriniz üçüncü taraflarla paylaşılmaz, satılmaz veya pazarlama amacıyla kullanılmaz."],
-              ["Veri Güvenliği", "Verileriniz Supabase altyapısı üzerinde güvenli şekilde saklanır. Supabase, endüstri standardı güvenlik protokollerini kullanır. Şifreleriniz hash'lenerek saklanır, düz metin olarak tutulmaz."],
-              ["Hesap Silme", "Ayarlar bölümünden hesabınızı ve tüm verilerinizi kalıcı olarak silebilirsiniz. Bu işlem geri alınamaz."],
-              ["Çerezler", "Bu uygulama çerez kullanmaz. Tema ve dil tercihleri cihazınızın yerel depolama alanında (localStorage) saklanır."],
-              ["İletişim", "Gizlilik konularında sorularınız için: ironlog.app@gmail.com"],
-            ] : [
-              ["Data We Collect", "Iron Log collects your username, email address, workout logs (date, exercise, sets, reps, RIR), and your personal training program. This data is used solely to provide app functionality."],
-              ["Use of Data", "Collected data is used only to serve you. Your workout history helps you track progress. Your data is never shared with third parties, sold, or used for marketing."],
-              ["Data Security", "Your data is securely stored on Supabase infrastructure, which uses industry-standard security protocols. Passwords are hashed and never stored in plain text."],
-              ["Account Deletion", "You can permanently delete your account and all associated data from the Settings section. This action is irreversible."],
-              ["Cookies", "This app does not use cookies. Theme and language preferences are stored in your device's local storage (localStorage)."],
-              ["Contact", "For privacy inquiries: ironlog.app@gmail.com"],
-            ]).map(([title, body], i) => (
-              <div key={i} style={{ marginBottom:24 }}>
-                <h3 style={{ color:th.text, fontSize:15, fontWeight:700, marginBottom:8 }}>{title}</h3>
-                <p style={{ color:th.textSec, fontSize:14, lineHeight:1.7 }}>{body}</p>
-              </div>
-            ))}
-          </div>
+        {/* Note */}
+        <div className="glass" style={{ background:th.pillBg, border:`1px solid ${th.divider}`, borderRadius:12, padding:"11px 16px", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
+          <p style={{ color:th.textSec, fontSize:12 }}>{lang==="tr"?prog.meta.note_tr:prog.meta.note_en}</p>
         </div>
       </div>
     );
   }
 
-  // ── TERMS OF USE ──
-  function TermsScreen({ th, t, lang, onBack }) {
-    return (
-      <div style={{ minHeight:"100vh", background:th.bgGrad, position:"relative", overflow:"hidden" }}>
-        <BgOrbs th={th} />
-        <div style={{ position:"relative", zIndex:1, maxWidth:680, margin:"0 auto", padding:"32px 20px 60px" }}>
-          <button onClick={onBack} style={{ background:"none", border:"none", color:th.textSec, fontSize:14, cursor:"pointer", marginBottom:24, padding:0 }}>← {lang==="tr"?"Geri":"Back"}</button>
-          <div className="glass" style={{ background:th.glass, border:`1px solid ${th.glassBorder}`, borderRadius:20, padding:"28px 28px", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", boxShadow:th.glassShadow }}>
-            <h1 style={{ color:th.text, fontSize:24, fontWeight:700, marginBottom:6 }}>{lang==="tr"?"Kullanım Şartları":"Terms of Use"}</h1>
-            <p style={{ color:th.textMuted, fontSize:12, marginBottom:28 }}>{lang==="tr"?"Son güncelleme: Mayıs 2026":"Last updated: May 2026"}</p>
-
-            {(lang==="tr" ? [
-              ["Kabul", "Iron Log uygulamasını kullanarak bu kullanım şartlarını kabul etmiş olursunuz. Kabul etmiyorsanız uygulamayı kullanmayınız."],
-              ["Hizmet", "Iron Log, kişisel antrenman takibi için tasarlanmış bir mobil uygulamadır. Uygulama 'olduğu gibi' sunulmaktadır."],
-              ["Kullanıcı Sorumluluğu", "Hesabınızın güvenliğinden siz sorumlusunuz. Şifrenizi kimseyle paylaşmayınız. Uygulama üzerinden yasadışı içerik paylaşmak yasaktır."],
-              ["Sağlık Uyarısı", "Iron Log bir fitness takip aracıdır, tıbbi tavsiye vermez. Yeni bir egzersiz programına başlamadan önce doktorunuza danışınız. Yaralanmalardan uygulama sorumlu tutulamaz."],
-              ["Hizmet Kesintileri", "Bakım, teknik sorunlar veya öngörülemeyen durumlar nedeniyle hizmet geçici olarak kesintiye uğrayabilir."],
-              ["Değişiklikler", "Bu şartlar önceden bildirim yapılmaksızın güncellenebilir. Güncel şartlar her zaman uygulama içinden erişilebilir olacaktır."],
-              ["İletişim", "Sorularınız için: ironlog.app@gmail.com"],
-            ] : [
-              ["Acceptance", "By using Iron Log, you agree to these terms of use. If you do not agree, please do not use the app."],
-              ["Service", "Iron Log is a mobile application designed for personal workout tracking. The app is provided 'as is'."],
-              ["User Responsibility", "You are responsible for your account security. Do not share your password. Sharing illegal content through the app is prohibited."],
-              ["Health Disclaimer", "Iron Log is a fitness tracking tool and does not provide medical advice. Consult your doctor before starting a new exercise program. The app is not liable for injuries."],
-              ["Service Interruptions", "The service may be temporarily unavailable due to maintenance, technical issues, or unforeseen circumstances."],
-              ["Changes", "These terms may be updated without prior notice. Updated terms will always be accessible within the app."],
-              ["Contact", "For inquiries: ironlog.app@gmail.com"],
-            ]).map(([title, body], i) => (
-              <div key={i} style={{ marginBottom:24 }}>
-                <h3 style={{ color:th.text, fontSize:15, fontWeight:700, marginBottom:8 }}>{title}</h3>
-                <p style={{ color:th.textSec, fontSize:14, lineHeight:1.7 }}>{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── PROGRAM VIEW ──
   function ProgramView({ session, customExList, setCustomExList, userProgram, setUserProgram, th, t, lang }) {
     const [subTab, setSubTab] = useState("programs");
     const [editProgram, setEditProgram] = useState(userProgram || {});
@@ -826,6 +641,7 @@
     const [newExName, setNewExName] = useState("");
     const [saveMsg, setSaveMsg] = useState("");
     const [editingCustomEx, setEditingCustomEx] = useState(null);
+    const hasProgram = Object.keys(editProgram).length > 0;
 
     useEffect(() => { setEditProgram(userProgram || {}); }, [userProgram]);
 
@@ -861,8 +677,6 @@
       setCustomExList(prev=>prev.filter(e=>e.name!==name));
     }
 
-    const hasProgram = Object.keys(editProgram).length > 0;
-
     async function handleUseGuray() {
       setEditProgram(GURAY_PROGRAM);
       await saveProgramToDB(GURAY_PROGRAM);
@@ -878,119 +692,90 @@
           ))}
         </div>
 
-        {subTab==="programs" && <ProgramsView th={th} t={t} lang={lang} session={session} onUseProgram={(prog)=>{ setEditProgram(prog||GURAY_PROGRAM); saveProgramToDB(prog||GURAY_PROGRAM); setSubTab("mine"); }} />}
+        {subTab==="programs" && <ProgramsView th={th} t={t} lang={lang} onUseProgram={p=>{ setEditProgram(p||GURAY_PROGRAM); saveProgramToDB(p||GURAY_PROGRAM); setSubTab("mine"); }} />}
 
-        {subTab==="mine" && <div>
-        <GlassCard th={th}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
-            <div>
-              <h3 style={{ fontWeight:700, fontSize:18, color:th.text, marginBottom:3 }}>{t.myProgram}</h3>
-              <p style={{ color:th.textSec, fontSize:13 }}>{t.programDesc}</p>
-            </div>
-            <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-              {saveMsg && <span style={{ color:th.green, fontSize:13, fontWeight:600 }}>{saveMsg}</span>}
-              {hasProgram && (
-                <button onClick={()=>saveProgramToDB(editProgram)} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 16px", cursor:"pointer", fontSize:13, fontWeight:600, borderRadius:12, boxShadow:`0 4px 12px ${th.accentGlow}` }}>{t.saveProgram}</button>
-              )}
-            </div>
-          </div>
-
-          <div style={{ background:th.accentBg, border:`1px solid ${th.accentBorder}`, borderRadius:14, padding:14, marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-            <div>
-              <p style={{ fontWeight:600, fontSize:14, color:th.text, marginBottom:2 }}>{t.gurayProgram}</p>
-              <p style={{ color:th.textSec, fontSize:12 }}>{t.gurayDesc}</p>
-            </div>
-            <button onClick={()=>{ setEditProgram(GURAY_PROGRAM); saveProgramToDB(GURAY_PROGRAM); }} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 16px", cursor:"pointer", fontSize:13, fontWeight:600, borderRadius:12, boxShadow:`0 4px 12px ${th.accentGlow}` }}>{t.use}</button>
-          </div>
-
-          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
-            <div style={{ flex:1, height:1, background:th.divider }} />
-            <span style={{ color:th.textMuted, fontSize:12 }}>{t.orManual}</span>
-            <div style={{ flex:1, height:1, background:th.divider }} />
-          </div>
-
-          <div style={{ marginBottom:12 }}>
-            <Label th={th}>{t.selectDay}</Label>
-            <GlassSelect th={th} value={selectedDay} onChange={e=>setSelectedDay(e.target.value)}>
-              {DAYS.filter(d=>d!=="DİĞER").map(d=><option key={d} value={d}>{t.days[d]||d}</option>)}
-            </GlassSelect>
-          </div>
-          <div style={{ display:"flex", gap:8, marginBottom:20 }}>
-            <GlassInput th={th} type="text" placeholder={t.exPh} value={newExName} onChange={e=>setNewExName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addExToDay()} style={{ flex:1 }} />
-            <button onClick={addExToDay} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"0 18px", cursor:"pointer", borderRadius:12, fontSize:20, fontWeight:700, boxShadow:`0 4px 12px ${th.accentGlow}`, flexShrink:0 }}>+</button>
-          </div>
-
-          {showShare && hasProgram && (
-            <div className="glass" style={{ background:th.accentBg, border:`1px solid ${th.accentBorder}`, borderRadius:14, padding:16, marginBottom:14, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
-              <p style={{ color:th.text, fontWeight:600, fontSize:14, marginBottom:12 }}>🌐 {t.saveProgram2}</p>
-              <div style={{ display:"flex", gap:8 }}>
-                <GlassInput th={th} type="text" placeholder={t.programNamePh} value={shareName} onChange={e=>setShareName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleShare()} style={{ flex:1 }} />
-                <button onClick={handleShare} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"0 16px", cursor:"pointer", borderRadius:12, fontSize:14, fontWeight:700, boxShadow:`0 4px 12px ${th.accentGlow}`, flexShrink:0 }}>+</button>
+        {subTab==="mine" && <>
+          <GlassCard th={th}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
+              <div>
+                <h3 style={{ fontWeight:700, fontSize:18, color:th.text, marginBottom:3 }}>{t.myProgram}</h3>
+                <p style={{ color:th.textSec, fontSize:13 }}>{t.programDesc}</p>
               </div>
-              {shareMsg && <p style={{ color:th.green, fontSize:13, marginTop:8, fontWeight:500 }}>{shareMsg}</p>}
+              <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                {saveMsg && <span style={{ color:th.green, fontSize:13, fontWeight:600 }}>{saveMsg}</span>}
+                {hasProgram && <button onClick={()=>saveProgramToDB(editProgram)} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 16px", cursor:"pointer", fontSize:13, fontWeight:600, borderRadius:12, boxShadow:`0 4px 12px ${th.accentGlow}` }}>{t.saveProgram}</button>}
+              </div>
             </div>
-          )}
 
-          {hasProgram ? (
-            <div style={{ background:th.pillBg, borderRadius:14, padding:16, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
-              {DAYS.filter(d=>editProgram[d]?.length>0).map(day=>(
-                <div key={day} style={{ marginBottom:14 }}>
-                  <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:1.5, marginBottom:8, textTransform:"uppercase" }}>{t.days[day]||day}</p>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                    {editProgram[day].map(ex=>(
-                      <span key={ex} style={{ background:th.tagBg, border:`1px solid ${th.tagBorder}`, padding:"5px 10px", fontSize:12, borderRadius:10, fontWeight:500, color:th.text, display:"flex", alignItems:"center", gap:6, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
-                        {ex}
-                        <button onClick={()=>removeExFromDay(day,ex)} style={{ background:"none", border:"none", color:th.textMuted, cursor:"pointer", fontSize:14, padding:0, lineHeight:1, transition:"color 0.2s" }}
-                          onMouseEnter={e=>e.target.style.color=th.accent} onMouseLeave={e=>e.target.style.color=th.textMuted}>×</button>
-                      </span>
-                    ))}
+            <div style={{ marginBottom:12 }}>
+              <label style={{ display:"block", color:th.textMuted, fontSize:10, fontWeight:700, letterSpacing:1.5, marginBottom:8, textTransform:"uppercase" }}>{t.selectDay}</label>
+              <GlassSelect th={th} value={selectedDay} onChange={e=>setSelectedDay(e.target.value)}>
+                {DAYS.filter(d=>d!=="DİĞER").map(d=><option key={d} value={d}>{t.days[d]||d}</option>)}
+              </GlassSelect>
+            </div>
+            <div style={{ display:"flex", gap:8, marginBottom:20 }}>
+              <GlassInput th={th} type="text" placeholder={t.exPh} value={newExName} onChange={e=>setNewExName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addExToDay()} style={{ flex:1 }} />
+              <button onClick={addExToDay} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"0 18px", cursor:"pointer", borderRadius:12, fontSize:20, fontWeight:700, boxShadow:`0 4px 12px ${th.accentGlow}`, flexShrink:0 }}>+</button>
+            </div>
+
+            {hasProgram ? (
+              <div style={{ background:th.pillBg, borderRadius:14, padding:16, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
+                {DAYS.filter(d=>editProgram[d]?.length>0).map(day=>(
+                  <div key={day} style={{ marginBottom:14 }}>
+                    <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:1.5, marginBottom:8, textTransform:"uppercase" }}>{t.days[day]||day}</p>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                      {editProgram[day].map(ex=>(
+                        <span key={ex} style={{ background:th.card, border:`1px solid ${th.glassBorder}`, padding:"4px 10px", fontSize:12, borderRadius:8, fontWeight:500, color:th.text, display:"flex", alignItems:"center", gap:6 }}>
+                          {ex}
+                          <button onClick={()=>removeExFromDay(day,ex)} style={{ background:"none", border:"none", color:th.textMuted, cursor:"pointer", fontSize:14, padding:0, lineHeight:1, transition:"color 0.2s" }}
+                            onMouseEnter={e=>e.target.style.color=th.accent} onMouseLeave={e=>e.target.style.color=th.textMuted}>×</button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ background:th.pillBg, borderRadius:14, padding:32, textAlign:"center", border:`1.5px dashed ${th.divider}` }}>
+                <p style={{ fontSize:36, marginBottom:8 }}>📋</p>
+                <p style={{ color:th.textMuted, fontSize:13 }}>{t.noProgram}</p>
+              </div>
+            )}
+          </GlassCard>
+
+          {customExList.length > 0 && (
+            <GlassCard th={th} style={{ marginTop:16 }}>
+              <h3 style={{ fontWeight:700, fontSize:16, color:th.text, marginBottom:4 }}>{t.myCustomEx}</h3>
+              <p style={{ color:th.textSec, fontSize:13, marginBottom:16 }}>{t.customExDesc}</p>
+              {customExList.map(ex=>(
+                <div key={ex.name} style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 0", borderBottom:`1px solid ${th.divider}` }}>
+                  {editingCustomEx?.name===ex.name ? (
+                    <>
+                      <GlassInput th={th} value={editingCustomEx.newName} onChange={e=>setEditingCustomEx({...editingCustomEx,newName:e.target.value})} onKeyDown={e=>e.key==="Enter"&&saveCustomExName()} style={{ flex:1, padding:"8px 12px", fontSize:14 }} autoFocus />
+                      <button onClick={saveCustomExName} style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 14px", cursor:"pointer", borderRadius:8, fontSize:13, fontWeight:600 }}>{t.save}</button>
+                      <button onClick={()=>setEditingCustomEx(null)} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"8px 12px", cursor:"pointer", borderRadius:8, fontSize:13 }}>{t.cancel}</button>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ flex:1 }}>
+                        <p style={{ fontWeight:500, fontSize:14, color:th.text }}>{ex.name}</p>
+                        <p style={{ color:th.textMuted, fontSize:11 }}>{t.days[ex.day]||ex.day}</p>
+                      </div>
+                      <button onClick={()=>setEditingCustomEx({name:ex.name,day:ex.day,newName:ex.name})} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"6px 12px", cursor:"pointer", borderRadius:8, fontSize:12, fontWeight:500, transition:"all 0.2s" }}
+                        onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textSec;}}>{t.edit}</button>
+                      <button onClick={()=>deleteCustomEx(ex.name)} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textMuted, padding:"6px 10px", cursor:"pointer", borderRadius:8, fontSize:14, transition:"all 0.2s" }}
+                        onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textMuted;}}>×</button>
+                    </>
+                  )}
                 </div>
               ))}
-            </div>
-          ) : (
-            <div style={{ background:th.pillBg, borderRadius:14, padding:32, textAlign:"center", border:`1.5px dashed ${th.divider}` }}>
-              <p style={{ fontSize:36, marginBottom:8 }}>📋</p>
-              <p style={{ color:th.textMuted, fontSize:13 }}>{t.noProgram}</p>
-            </div>
+            </GlassCard>
           )}
-        </GlassCard>
-
-        </div>}
-
-        {subTab==="mine" && customExList.length > 0 && (
-          <GlassCard th={th} style={{ marginTop:16 }}>
-            <h3 style={{ fontWeight:700, fontSize:16, color:th.text, marginBottom:4 }}>{t.myCustomEx}</h3>
-            <p style={{ color:th.textSec, fontSize:13, marginBottom:16 }}>{t.customExDesc}</p>
-            {customExList.map(ex=>(
-              <div key={ex.name} style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 0", borderBottom:`1px solid ${th.divider}` }}>
-                {editingCustomEx?.name===ex.name ? (
-                  <>
-                    <GlassInput th={th} value={editingCustomEx.newName} onChange={e=>setEditingCustomEx({...editingCustomEx,newName:e.target.value})} onKeyDown={e=>e.key==="Enter"&&saveCustomExName()} style={{ flex:1, padding:"8px 12px", fontSize:14 }} autoFocus />
-                    <button onClick={saveCustomExName} style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 14px", cursor:"pointer", borderRadius:10, fontSize:13, fontWeight:600 }}>{t.save}</button>
-                    <button onClick={()=>setEditingCustomEx(null)} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"8px 12px", cursor:"pointer", borderRadius:10, fontSize:13 }}>{t.cancel}</button>
-                  </>
-                ) : (
-                  <>
-                    <div style={{ flex:1 }}>
-                      <p style={{ fontWeight:500, fontSize:14, color:th.text }}>{ex.name}</p>
-                      <p style={{ color:th.textMuted, fontSize:11 }}>{t.days[ex.day]||ex.day}</p>
-                    </div>
-                    <button onClick={()=>setEditingCustomEx({name:ex.name,day:ex.day,newName:ex.name})} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"6px 12px", cursor:"pointer", borderRadius:10, fontSize:12, fontWeight:500, transition:"all 0.2s" }}
-                      onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textSec;}}>{t.edit}</button>
-                    <button onClick={()=>deleteCustomEx(ex.name)} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textMuted, padding:"6px 10px", cursor:"pointer", borderRadius:10, fontSize:14, transition:"all 0.2s" }}
-                      onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textMuted;}}>×</button>
-                  </>
-                )}
-              </div>
-            ))}
-          </GlassCard>
-        )}
+        </>}
       </div>
     );
   }
 
-  // ── SETTINGS VIEW ──
   function SettingsView({ session, themeName, setThemeName, lang, setLang, th, t }) {
     const [newUsername, setNewUsername] = useState(session.user.user_metadata?.username || "");
     const [usernameMsg, setUsernameMsg] = useState("");
