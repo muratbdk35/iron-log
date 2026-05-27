@@ -253,6 +253,7 @@
       deleteBtn:"Kalıcı Olarak Sil", deleting:"Siliniyor...", back:"← Geri",
       rememberMe:"Beni hatırla", changeDay:"Farklı gün seç", autoDay:"otomatik",
       presetPrograms:"Hazır Programlar", communityPrograms:"Topluluk Programları", presetProgram:"HAZIR PROGRAM", useProgram:"Bu Programı Kullan",
+      clearProgram:"Tümünü Temizle", saveAsNew:"Programı Kaydet", savedPrograms:"Kayıtlı Programlar", programNameLabel2:"Program adı gir", myBadge:"Benim",
       saveProgram2:"Programı Paylaş", programNamePh:"ör. Güç Programı", programNameLabel:"Program Adı",
       shareSuccess:"✓ Program paylaşıldı!", confirmDelete:"Bu programı silmek istiyor musun?",
       newPassword:"Yeni Şifre", newPasswordRepeat:"Şifre Tekrar",
@@ -293,6 +294,7 @@
       deleteBtn:"Permanently Delete", deleting:"Deleting...", back:"← Back",
       rememberMe:"Remember me", changeDay:"Change day", autoDay:"auto",
       presetPrograms:"Preset Programs", communityPrograms:"Community Programs", presetProgram:"PRESET PROGRAM", useProgram:"Use This Program",
+      clearProgram:"Clear All", saveAsNew:"Save Program", savedPrograms:"My Programs", programNameLabel2:"Enter program name", myBadge:"Mine",
       saveProgram2:"Share Program", programNamePh:"e.g. Strength Program", programNameLabel:"Program Name",
       shareSuccess:"✓ Program shared!", confirmDelete:"Do you want to delete this program?",
       newPassword:"New Password", newPasswordRepeat:"Repeat Password",
@@ -545,7 +547,7 @@
   }
 
   // ── PROGRAMS VIEW ──
-  function ProgramsView({ th, t, lang, onUseProgram }) {
+  function ProgramsView({ th, t, lang, onUseProgram, savedProgs, onDeleteSaved }) {
     const [expandedDay, setExpandedDay] = useState(null);
     const prog = GURAY_PROGRAM_FULL;
 
@@ -626,10 +628,6 @@
           </div>
         )}
 
-        {/* Note */}
-        <div className="glass" style={{ background:th.pillBg, border:`1px solid ${th.divider}`, borderRadius:12, padding:"11px 16px", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
-          <p style={{ color:th.textSec, fontSize:12 }}>{lang==="tr"?prog.meta.note_tr:prog.meta.note_en}</p>
-        </div>
       </div>
     );
   }
@@ -641,13 +639,43 @@
     const [newExName, setNewExName] = useState("");
     const [saveMsg, setSaveMsg] = useState("");
     const [editingCustomEx, setEditingCustomEx] = useState(null);
+    const [showSaveName, setShowSaveName] = useState(false);
+    const [saveName, setSaveName] = useState("");
     const hasProgram = Object.keys(editProgram).length > 0;
 
-    useEffect(() => { setEditProgram(userProgram || {}); }, [userProgram]);
+    // savedProgs stored alongside active program in user_programs as {active, saved:[]}
+    const savedProgs = userProgram?._saved || [];
+
+    useEffect(() => { setEditProgram(userProgram?._active || userProgram || {}); }, [userProgram]);
 
     async function saveProgramToDB(prog) {
-      const { error } = await sb.from("user_programs").upsert({ user_id:session.user.id, program:prog }, { onConflict:"user_id" });
-      if (!error) { setUserProgram(prog); setSaveMsg(t.savedMsg); setTimeout(()=>setSaveMsg(""), 2000); }
+      const payload = { ...(userProgram||{}), _active: prog, program: prog };
+      const { error } = await sb.from("user_programs").upsert({ user_id:session.user.id, program:payload }, { onConflict:"user_id" });
+      if (!error) { setUserProgram(payload); setSaveMsg(t.savedMsg); setTimeout(()=>setSaveMsg(""), 2000); }
+    }
+
+    async function clearProgram() {
+      if (!window.confirm(lang==="tr"?"Programı tamamen silmek istiyor musun?":"Clear your entire program?")) return;
+      const payload = { ...(userProgram||{}), _active:{}, program:{} };
+      await sb.from("user_programs").upsert({ user_id:session.user.id, program:payload }, { onConflict:"user_id" });
+      setUserProgram(payload); setEditProgram({});
+    }
+
+    async function saveAsNewProgram() {
+      const name = saveName.trim();
+      if (!name || !hasProgram) return;
+      const newSaved = [...savedProgs, { name, program: editProgram }];
+      const payload = { ...(userProgram||{}), _active:editProgram, _saved:newSaved, program:editProgram };
+      await sb.from("user_programs").upsert({ user_id:session.user.id, program:payload }, { onConflict:"user_id" });
+      setUserProgram(payload); setSaveName(""); setShowSaveName(false);
+      setSaveMsg("✓"); setTimeout(()=>setSaveMsg(""), 2000);
+    }
+
+    async function deleteSavedProgram(idx) {
+      const newSaved = savedProgs.filter((_,i)=>i!==idx);
+      const payload = { ...(userProgram||{}), _saved:newSaved };
+      await sb.from("user_programs").upsert({ user_id:session.user.id, program:payload }, { onConflict:"user_id" });
+      setUserProgram(payload);
     }
 
     function addExToDay() {
@@ -692,7 +720,7 @@
           ))}
         </div>
 
-        {subTab==="programs" && <ProgramsView th={th} t={t} lang={lang} onUseProgram={p=>{ setEditProgram(p||GURAY_PROGRAM); saveProgramToDB(p||GURAY_PROGRAM); setSubTab("mine"); }} />}
+        {subTab==="programs" && <ProgramsView th={th} t={t} lang={lang} savedProgs={savedProgs} onDeleteSaved={deleteSavedProgram} onUseProgram={p=>{ setEditProgram(p||GURAY_PROGRAM); saveProgramToDB(p||GURAY_PROGRAM); setSubTab("mine"); }} />}
 
         {subTab==="mine" && <>
           <GlassCard th={th}>
@@ -703,9 +731,23 @@
               </div>
               <div style={{ display:"flex", gap:8, alignItems:"center" }}>
                 {saveMsg && <span style={{ color:th.green, fontSize:13, fontWeight:600 }}>{saveMsg}</span>}
-                {hasProgram && <button onClick={()=>saveProgramToDB(editProgram)} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 16px", cursor:"pointer", fontSize:13, fontWeight:600, borderRadius:12, boxShadow:`0 4px 12px ${th.accentGlow}` }}>{t.saveProgram}</button>}
+                <div style={{ display:"flex", gap:6 }}>
+                  {hasProgram && <button onClick={clearProgram} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"8px 12px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:12, transition:"all 0.2s" }}>{t.clearProgram}</button>}
+                  {hasProgram && <button onClick={()=>setShowSaveName(!showSaveName)} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"8px 12px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:12, transition:"all 0.2s" }}>💾</button>}
+                  {hasProgram && <button onClick={()=>saveProgramToDB(editProgram)} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 14px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:12, boxShadow:`0 4px 12px ${th.accentGlow}` }}>{t.saveProgram}</button>}
+                </div>
               </div>
             </div>
+
+            {showSaveName && (
+              <div style={{ background:th.accentBg, border:`1px solid ${th.accentBorder}`, borderRadius:12, padding:14, marginBottom:14 }}>
+                <p style={{ color:th.text, fontSize:13, fontWeight:600, marginBottom:10 }}>💾 {t.saveAsNew}</p>
+                <div style={{ display:"flex", gap:8 }}>
+                  <GlassInput th={th} type="text" placeholder={t.programNameLabel2} value={saveName} onChange={e=>setSaveName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveAsNewProgram()} style={{ flex:1 }} />
+                  <button onClick={saveAsNewProgram} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"0 16px", cursor:"pointer", borderRadius:12, fontSize:14, fontWeight:700, flexShrink:0 }}>+</button>
+                </div>
+              </div>
+            )}
 
             <div style={{ marginBottom:12 }}>
               <label style={{ display:"block", color:th.textMuted, fontSize:10, fontWeight:700, letterSpacing:1.5, marginBottom:8, textTransform:"uppercase" }}>{t.selectDay}</label>
