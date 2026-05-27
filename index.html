@@ -236,6 +236,8 @@
       noWorkouts:"Henüz antrenman yok", exercises:"egzersiz", noData:"Henüz veri yok",
       allExercises:"Tümü", bestRM:"En İyi 1RM", sessions:"Seans", lastRM:"Son 1RM",
       myProgram:"Programım", programDesc:"Günlere egzersiz ekle veya hazır program kullan",
+      programsTab:"Programlar", myProgramTab:"Programım",
+      days:{"PAZARTESİ":"Pazartesi","SALI":"Salı","ÇARŞAMBA":"Çarşamba","PERŞEMBE":"Perşembe","CUMA":"Cuma","CUMARTESİ":"Cumartesi","PAZAR":"Pazar","DİĞER":"Diğer"},
       gurayProgram:"Guray's Hypertrophy Max", gurayDesc:"Hazır program — tek tıkla",
       use:"Kullan", orManual:"ya da elle gir", selectDay:"Gün Seç",
       exPh:"ör. Bench Press", saveProgram:"Kaydet", savedMsg:"✓ Kaydedildi!",
@@ -269,6 +271,8 @@
       noWorkouts:"No workouts yet", exercises:"exercises", noData:"No data yet",
       allExercises:"All", bestRM:"Best 1RM", sessions:"Sessions", lastRM:"Last 1RM",
       myProgram:"My Program", programDesc:"Add exercises per day or use a preset",
+      programsTab:"Programs", myProgramTab:"My Program",
+      days:{"PAZARTESİ":"Monday","SALI":"Tuesday","ÇARŞAMBA":"Wednesday","PERŞEMBE":"Thursday","CUMA":"Friday","CUMARTESİ":"Saturday","PAZAR":"Sunday","DİĞER":"Other"},
       gurayProgram:"Guray's Hypertrophy Max", gurayDesc:"Preset program — one click",
       use:"Use", orManual:"or enter manually", selectDay:"Select Day",
       exPh:"e.g. Bench Press", saveProgram:"Save", savedMsg:"✓ Saved!",
@@ -412,16 +416,20 @@
   // ── AUTH ──
   function AuthScreen({ th, t, lang, setLang }) {
     const [mode, setMode] = useState("login");
+    const [rememberMe, setRememberMe] = useState(!!localStorage.getItem("ironlog-remember-email"));
     const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [password2, setPassword2] = useState("");
     const [msg, setMsg] = useState({ text:"", ok:false });
     const [loading, setLoading] = useState(false);
 
+    const [email, setEmail] = useState(localStorage.getItem("ironlog-remember-email")||"");
+
     async function handleLogin() {
       if (!email || !password) return;
       setLoading(true); setMsg({ text:"", ok:false });
+      if (rememberMe) localStorage.setItem("ironlog-remember-email", email);
+      else localStorage.removeItem("ironlog-remember-email");
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) setMsg({ text:t.loginError, ok:false });
       setLoading(false);
@@ -452,9 +460,14 @@
       <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24, background:th.bgGrad, position:"relative", overflow:"hidden" }}>
         <BgOrbs th={th} />
         <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:380 }}>
-          <div style={{ textAlign:"center", marginBottom:40 }}>
-            <img src="repmax.png" alt="Repmax" style={{ width:240, marginBottom:16, display:"block", margin:"0 auto 16px" }} />
-            <p style={{ color:th.textSec, fontSize:11, letterSpacing:3, fontWeight:500 }}>{t.appSub}</p>
+          <div style={{ textAlign:"center", marginBottom:32 }}>
+            <img src="repmax.png" alt="Repmax" style={{ width:220, display:"block", margin:"0 auto 14px" }} />
+            <p style={{ color:th.textSec, fontSize:11, letterSpacing:3, fontWeight:500, marginBottom:16 }}>{t.appSub}</p>
+            <div style={{ display:"flex", justifyContent:"center", gap:8 }}>
+              {[["tr","🇹🇷 TR"],["en","🇬🇧 EN"]].map(([val,lb])=>(
+                <button key={val} onClick={()=>{ setLang(val); localStorage.setItem("ironlog-lang",val); }} style={{ background:lang===val?th.accent:th.pillBg, border:`1px solid ${lang===val?th.accent:th.divider}`, color:lang===val?"#fff":th.textSec, padding:"5px 16px", cursor:"pointer", borderRadius:20, fontSize:12, fontWeight:600, transition:"all 0.2s", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>{lb}</button>
+              ))}
+            </div>
           </div>
 
           {mode==="forgot" ? (
@@ -593,7 +606,7 @@
               <div style={{ background:`linear-gradient(135deg, ${col}18, ${col}08)`, borderBottom:`1px solid ${th.divider}`, padding:"16px 20px" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                   <div>
-                    <p style={{ color:col, fontSize:11, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:4 }}>{d.day}</p>
+                    <p style={{ color:col, fontSize:11, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:4 }}>{t.days[d.day]||d.day}</p>
                     <p style={{ color:th.text, fontSize:16, fontWeight:600 }}>{d.focus}</p>
                   </div>
                   <span style={{ background:`${col}20`, color:col, fontSize:12, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>
@@ -773,7 +786,7 @@
       <div style={{ maxWidth:520 }}>
         {/* Sub tab switcher */}
         <div style={{ display:"flex", background:th.pillBg, borderRadius:14, padding:3, marginBottom:16, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
-          {[["programs","Programlar"],["mine","Programım"]].map(([k,lb])=>(
+          {[["programs",t.programsTab],["mine",t.myProgramTab]].map(([k,lb])=>(
             <button key={k} onClick={()=>setSubTab(k)} style={{ flex:1, background:subTab===k?th.glass:"transparent", border:`1px solid ${subTab===k?th.glassBorder:"transparent"}`, color:subTab===k?th.text:th.textSec, fontSize:13, fontWeight:subTab===k?700:500, padding:"10px", cursor:"pointer", borderRadius:12, backdropFilter:subTab===k?"blur(12px)":"none", WebkitBackdropFilter:subTab===k?"blur(12px)":"none", transition:"all 0.2s", boxShadow:subTab===k?th.glassShadow:"none" }}>{lb}</button>
           ))}
         </div>
@@ -812,7 +825,7 @@
           <div style={{ marginBottom:12 }}>
             <Label th={th}>{t.selectDay}</Label>
             <GlassSelect th={th} value={selectedDay} onChange={e=>setSelectedDay(e.target.value)}>
-              {DAYS.filter(d=>d!=="DİĞER").map(d=><option key={d} value={d}>{d}</option>)}
+              {DAYS.filter(d=>d!=="DİĞER").map(d=><option key={d} value={d}>{t.days[d]||d}</option>)}
             </GlassSelect>
           </div>
           <div style={{ display:"flex", gap:8, marginBottom:20 }}>
@@ -824,7 +837,7 @@
             <div style={{ background:th.pillBg, borderRadius:14, padding:16, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
               {DAYS.filter(d=>editProgram[d]?.length>0).map(day=>(
                 <div key={day} style={{ marginBottom:14 }}>
-                  <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:1.5, marginBottom:8, textTransform:"uppercase" }}>{day}</p>
+                  <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:1.5, marginBottom:8, textTransform:"uppercase" }}>{t.days[day]||day}</p>
                   <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
                     {editProgram[day].map(ex=>(
                       <span key={ex} style={{ background:th.tagBg, border:`1px solid ${th.tagBorder}`, padding:"5px 10px", fontSize:12, borderRadius:10, fontWeight:500, color:th.text, display:"flex", alignItems:"center", gap:6, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
@@ -863,7 +876,7 @@
                   <>
                     <div style={{ flex:1 }}>
                       <p style={{ fontWeight:500, fontSize:14, color:th.text }}>{ex.name}</p>
-                      <p style={{ color:th.textMuted, fontSize:11 }}>{ex.day}</p>
+                      <p style={{ color:th.textMuted, fontSize:11 }}>{t.days[ex.day]||ex.day}</p>
                     </div>
                     <button onClick={()=>setEditingCustomEx({name:ex.name,day:ex.day,newName:ex.name})} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"6px 12px", cursor:"pointer", borderRadius:10, fontSize:12, fontWeight:500, transition:"all 0.2s" }}
                       onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textSec;}}>{t.edit}</button>
@@ -1148,7 +1161,7 @@
                       const isActive = programDay===d;
                       return (
                         <button key={d} onClick={()=>{ setProgramDay(d); setExercise(""); }} style={{ background:isActive?th.accent:th.pillBg, border:`1px solid ${isActive?th.accent:th.divider}`, color:isActive?"#fff":th.text, padding:"7px 13px", cursor:"pointer", borderRadius:20, fontSize:12, fontWeight:isActive?700:500, transition:"all 0.2s", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", boxShadow:isActive?`0 3px 10px ${th.accentGlow}`:"none" }}>
-                          {d.charAt(0)+d.slice(1).toLowerCase()}
+                          {t.days[d] || d}
                         </button>
                       );
                     })}
@@ -1164,14 +1177,14 @@
                       const otherDays = DAYS.filter(d=>d!==programDay&&d!=="DİĞER");
                       return <>
                         {dayEx.length>0 && (
-                          <optgroup label={`📅 ${programDay.charAt(0)+programDay.slice(1).toLowerCase()} (${t.today})`}>
+                          <optgroup label={`📅 ${t.days[programDay]||programDay} (${t.today})`}>
                             {dayEx.map(ex=><option key={ex} value={ex}>{ex}</option>)}
                           </optgroup>
                         )}
                         {otherDays.map(day=>{
                           const all=[...(activeProgram[day]||[]),...customExList.filter(e=>e.day===day).map(e=>e.name)];
                           if(!all.length) return null;
-                          return <optgroup key={day} label={day.charAt(0)+day.slice(1).toLowerCase()}>{all.map(ex=><option key={ex} value={ex}>{ex}</option>)}</optgroup>;
+                          return <optgroup key={day} label={t.days[day]||day}>{all.map(ex=><option key={ex} value={ex}>{ex}</option>)}</optgroup>;
                         })}
                       </>;
                     })()}
@@ -1207,7 +1220,7 @@
                       <div style={{ marginBottom:12 }}>
                         <Label th={th}>{t.whichDay}</Label>
                         <GlassSelect th={th} value={customExDay} onChange={e=>setCustomExDay(e.target.value)}>
-                          {DAYS.map(d=><option key={d} value={d}>{d}</option>)}
+                          {DAYS.map(d=><option key={d} value={d}>{t.days[d]||d}</option>)}
                         </GlassSelect>
                       </div>
                       <Label th={th}>{t.exName}</Label>
