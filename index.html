@@ -85,7 +85,8 @@
       name: "Guray's Hypertrophy Max",
       split: "Push · Pull · Legs · Push · Pull",
       days: 5,
-      note: "*Her 2 antrenman sonunda: 3×10 Cable Crunch / 3×10 Standing Calf Raise"
+      note_tr: "*Her 2 antrenman sonunda: 3×10 Cable Crunch / 3×10 Standing Calf Raise",
+      note_en: "*After every 2 sessions: 3×10 Cable Crunch / 3×10 Standing Calf Raise"
     },
     days: [
       {
@@ -394,7 +395,7 @@
         <BgOrbs th={th} />
         <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:380 }}>
           <div style={{ textAlign:"center", marginBottom:40 }}>
-            <img src="repmax.png" alt="Repmax" style={{ width:240, display:"block", margin:"0 auto" }} />
+            <img src="repmax.png" alt="Repmax" style={{ width:240, display:"block", margin:"0 auto", filter:"drop-shadow(0 0 16px rgba(232,68,48,0.5))" }} />
           </div>
           <GlassCard th={th}>
             <h3 style={{ fontWeight:700, fontSize:20, color:th.text, marginBottom:6 }}>{t.setNewPassword}</h3>
@@ -463,7 +464,7 @@
         <BgOrbs th={th} />
         <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:380 }}>
           <div style={{ textAlign:"center", marginBottom:32 }}>
-            <img src="repmax.png" alt="Repmax" style={{ width:220, display:"block", margin:"0 auto 14px" }} />
+            <img src="repmax.png" alt="Repmax" style={{ width:220, display:"block", margin:"0 auto 14px", filter:"drop-shadow(0 0 16px rgba(232,68,48,0.5))" }} />
             <p style={{ color:th.textSec, fontSize:11, letterSpacing:3, fontWeight:500, marginBottom:16 }}>{t.appSub}</p>
             <div style={{ display:"flex", justifyContent:"center", gap:8 }}>
               {[["tr","🇹🇷 TR"],["en","🇬🇧 EN"]].map(([val,lb])=>(
@@ -1090,7 +1091,7 @@
       <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:th.bgGrad, position:"relative", overflow:"hidden" }}>
         <BgOrbs th={th} />
         <div style={{ position:"relative", zIndex:1, overflowX:"hidden", width:"100%" }}>
-          <img src="repmax.png" alt="Repmax" style={{ width:240, display:"block", margin:"0 auto" }} />
+          <img src="repmax.png" alt="Repmax" style={{ width:240, display:"block", margin:"0 auto", filter:"drop-shadow(0 0 16px rgba(232,68,48,0.5))" }} />
         </div>
       </div>
     );
@@ -1104,7 +1105,7 @@
           {/* Header */}
           <div className="glass" style={{ background:th.headerGlass, borderBottom:`1px solid ${th.headerBorder}`, backdropFilter:"blur(30px)", WebkitBackdropFilter:"blur(30px)", position:"sticky", top:0, zIndex:100 }}>
             <div style={{ maxWidth:720, margin:"0 auto", padding:"0 20px", height:56, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-              <img src="repmax.png" alt="Repmax" style={{ height:26 }} />
+              <img src="repmax.png" alt="Repmax" style={{ height:26, filter:"drop-shadow(0 0 8px rgba(232,68,48,0.4))" }} />
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                 <span style={{ color:th.textSec, fontSize:13, fontWeight:500 }}>{username}</span>
                 <button onClick={()=>sb.auth.signOut()} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, fontSize:12, fontWeight:600, padding:"5px 12px", cursor:"pointer", borderRadius:20, transition:"all 0.2s", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
