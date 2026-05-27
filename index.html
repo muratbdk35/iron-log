@@ -1179,7 +1179,7 @@
                   {overrideDay && (
                     <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginTop:10 }}>
                       {DAYS.filter(d=>d!=="DİĞER").map(d=>{
-                        const hasExs = (activeProgram[d]||[]).length>0 || customExList.some(e=>e.day===d);
+                        const hasExs = (activeProgram[d]||[]).length>0 || customExList.some(e=>e.day===d); 
                         if (!hasExs) return null;
                         const isActive = programDay===d;
                         return (
@@ -1197,7 +1197,7 @@
                   <GlassSelect th={th} value={exercise} onChange={e=>setExercise(e.target.value)}>
                     <option value="">{t.selectEx}</option>
                     {(() => {
-                      const dayEx = [...(activeProgram[programDay]||[]), ...customExList.filter(e=>e.day===programDay).map(e=>e.name)];
+                      const dayEx = [...(activeProgram[programDay]||[]).map(e=>exName(e)), ...customExList.filter(e=>e.day===programDay).map(e=>e.name)];
                       const otherDays = DAYS.filter(d=>d!==programDay&&d!=="DİĞER");
                       return <>
                         {dayEx.length>0 && (
@@ -1206,7 +1206,7 @@
                           </optgroup>
                         )}
                         {otherDays.map(day=>{
-                          const all=[...(activeProgram[day]||[]),...customExList.filter(e=>e.day===day).map(e=>e.name)];
+                          const all=[...(activeProgram[day]||[]).map(e=>exName(e)),...customExList.filter(e=>e.day===day).map(e=>e.name)];
                           if(!all.length) return null;
                           return <optgroup key={day} label={t.days[day]||day}>{all.map(ex=><option key={ex} value={ex}>{ex}</option>)}</optgroup>;
                         })}
