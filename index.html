@@ -549,6 +549,31 @@
   }
 
   // ── PROGRAMS VIEW ──
+  const EXERCISE_POOL = [
+    // Göğüs
+    "Bench Press","Incline Bench Press","Decline Bench Press","Dumbbell Bench Press",
+    "Incline Dumbbell Press","Plate Loaded Chest Press","Smith Machine Low Incline Press",
+    "Chest Fly Machine","Cable Fly","Pec Deck","Push Up",
+    // Omuz
+    "Overhead Press","Dumbbell Shoulder Press","Arnold Press","Shoulder Press Machine",
+    "Lateral Raise","Cable Lateral Raise","Front Raise","Rear Delt Fly","Cable Rear Delt Fly",
+    "Face Pull","Shrug","Upright Row",
+    // Sırt
+    "Pull Up","Chin Up","Lat Pulldown","Barbell Row","Dumbbell Row","Cable Row",
+    "Plate Loaded Wide Grip Row","T-Bar Row","Deadlift","Romanian Deadlift","Back Extension",
+    // Bacak
+    "Squat","Hack Squat","Leg Press","Bulgarian Split Squat","Lunge","Walking Lunge",
+    "Leg Extension","Seated Leg Curl","Lying Leg Curl","Hip Thrust","Standing Calf Raise","Seated Calf Raise",
+    // Biceps
+    "Barbell Curl","Dumbbell Curl","Incline Dumbbell Curl","Cable Curl",
+    "Hammer Curl","Reverse Barbell Curl","Preacher Curl","Concentration Curl",
+    // Triceps
+    "Tricep Pushdown","Overhead Rope Extension","Skullcrusher","Close Grip Bench Press",
+    "Dips","Overhead Tricep Extension","Kickback",
+    // Karın
+    "Cable Crunch","Crunch","Leg Raise","Hanging Leg Raise","Plank","Ab Wheel","Russian Twist",
+  ];
+
   function exName(ex) { return typeof ex === "string" ? ex : ex.name; }
   function exSets(ex) { return typeof ex === "string" ? null : ex.sets; }
   function exReps(ex) { return typeof ex === "string" ? null : ex.reps; }
@@ -707,6 +732,7 @@
     const [newExReps, setNewExReps] = useState("");
     const [newExIntensity, setNewExIntensity] = useState("");
     const [newExNote, setNewExNote] = useState("");
+    const [suggestions, setSuggestions] = useState([]);
     const [programNote, setProgramNote] = useState(userProgram?._note || "");
     const [saveMsg, setSaveMsg] = useState("");
     const [editingCustomEx, setEditingCustomEx] = useState(null);
@@ -763,7 +789,7 @@
         ? { name, sets:newExSets, reps:newExReps, intensity:newExIntensity, note:newExNote }
         : name;
       setEditProgram({ ...editProgram, [selectedDay]: [...current, ex] });
-      setNewExName(""); setNewExSets(""); setNewExReps(""); setNewExIntensity(""); setNewExNote("");
+      setNewExName(""); setNewExSets(""); setNewExReps(""); setNewExIntensity(""); setNewExNote(""); setSuggestions([]);
     }
 
     function removeExFromDay(day, exItem) {
@@ -838,7 +864,23 @@
             </div>
             <div style={{ marginBottom:8 }}>
               <div style={{ display:"flex", gap:8, marginBottom:8 }}>
-                <GlassInput th={th} type="text" placeholder={t.exPh} value={newExName} onChange={e=>setNewExName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addExToDay()} style={{ flex:1 }} />
+                <div style={{ position:"relative", flex:1 }}>
+                  <GlassInput th={th} type="text" placeholder={t.exPh} value={newExName}
+                    onChange={e=>{ setNewExName(e.target.value); const v=e.target.value.trim(); setSuggestions(v.length>1?EXERCISE_POOL.filter(ex=>ex.toLowerCase().includes(v.toLowerCase())).slice(0,5):[]); }}
+                    onKeyDown={e=>{ if(e.key==="Enter"){addExToDay();setSuggestions([]);} if(e.key==="Escape")setSuggestions([]); }}
+                    onBlur={()=>setTimeout(()=>setSuggestions([]),150)}
+                    style={{ width:"100%" }} />
+                  {suggestions.length>0 && (
+                    <div style={{ position:"absolute", top:"100%", left:0, right:0, zIndex:50, background:th.glassHeavy, border:`1px solid ${th.glassBorder}`, borderRadius:"0 0 12px 12px", overflow:"hidden", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", boxShadow:th.glassShadow }}>
+                      {suggestions.map(s=>(
+                        <button key={s} onMouseDown={()=>{ setNewExName(s); setSuggestions([]); }} style={{ width:"100%", background:"none", border:"none", borderBottom:`1px solid ${th.divider}`, color:th.text, padding:"10px 14px", cursor:"pointer", textAlign:"left", fontSize:13, fontWeight:500, transition:"background 0.15s" }}
+                          onMouseEnter={e=>e.target.style.background=th.accentBg} onMouseLeave={e=>e.target.style.background="none"}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button onClick={addExToDay} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"0 18px", cursor:"pointer", borderRadius:12, fontSize:20, fontWeight:700, boxShadow:`0 4px 12px ${th.accentGlow}`, flexShrink:0 }}>+</button>
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6, marginBottom:8 }}>
@@ -1118,7 +1160,7 @@
     const username = session?.user.user_metadata?.username || session?.user.email?.split("@")[0];
 
     const TABS = [
-      ["log", t.save, "💪"],
+      ["log", t.daily, "💪"],
       ["history", t.history, "📋"],
       ["progress", t.progress, "📈"],
       ["program", t.program, "🗓"],
