@@ -80,6 +80,73 @@
   const DAYS = ["PAZARTESİ","SALI","ÇARŞAMBA","PERŞEMBE","CUMA","CUMARTESİ","PAZAR","DİĞER"];
   const DATE_TO_DAY = ["PAZAR","PAZARTESİ","SALI","ÇARŞAMBA","PERŞEMBE","CUMA","CUMARTESİ"];
 
+  const GURAY_PROGRAM_FULL = {
+    meta: {
+      name: "Guray's Hypertrophy Max",
+      split: "Push · Pull · Legs · Push · Pull",
+      days: 5,
+      note: "*Her 2 antrenman sonunda: 3×10 Cable Crunch / 3×10 Standing Calf Raise"
+    },
+    days: [
+      {
+        day: "PAZARTESİ", focus: "Göğüs · Omuz · Triceps",
+        exercises: [
+          { name:"Plate Loaded Chest Press",      sets:"2", reps:"5-6",  intensity:"RIR 1" },
+          { name:"Smith Machine Low Incline Press",sets:"2", reps:"5-6",  intensity:"RIR 1" },
+          { name:"Chest Fly Machine",              sets:"1", reps:"6-8",  intensity:"Failure" },
+          { name:"Shoulder Press Machine",         sets:"2", reps:"6-8",  intensity:"RIR 1" },
+          { name:"Lateral Raise",                  sets:"3", reps:"8-10", intensity:"Failure" },
+          { name:"Triceps Pushdown",               sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Overhead Rope Extension",        sets:"2", reps:"8-10", intensity:"Failure" },
+        ]
+      },
+      {
+        day: "SALI", focus: "Sırt · Biceps",
+        exercises: [
+          { name:"Lat Pulldown",                           sets:"2", reps:"6-8",  intensity:"RIR 1-Failure" },
+          { name:"Barbell Row",                            sets:"3", reps:"6-8",  intensity:"RIR 1-Failure" },
+          { name:"Cable Row",                              sets:"1", reps:"8-10", intensity:"Failure" },
+          { name:"Dumbbell Curl",                          sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Cable Curl",                             sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Hammer Curl + Reverse Barbell Curl",     sets:"2", reps:"8-10", intensity:"Failure", note:"Super Set" },
+        ]
+      },
+      {
+        day: "ÇARŞAMBA", focus: "Bacak",
+        exercises: [
+          { name:"Leg Press",       sets:"2", reps:"6-8",  intensity:"RIR 1-2" },
+          { name:"Hack Squat",      sets:"2", reps:"6-8",  intensity:"RIR 1-2" },
+          { name:"Leg Extension",   sets:"2", reps:"8-10", intensity:"Failure" },
+          { name:"Seated Leg Curl", sets:"3", reps:"8-10", intensity:"RIR 1" },
+        ]
+      },
+      {
+        day: "CUMA", focus: "Göğüs · Omuz · Triceps",
+        exercises: [
+          { name:"Shoulder Press Machine",         sets:"2", reps:"6-8",  intensity:"RIR 1" },
+          { name:"Lateral Raise",                  sets:"3", reps:"8-10", intensity:"Failure" },
+          { name:"Smith Machine Low Incline Press",sets:"2", reps:"5-6",  intensity:"RIR 1" },
+          { name:"Chest Fly Machine",              sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Cable Rear Delt Fly",            sets:"2", reps:"8-10", intensity:"Failure" },
+          { name:"Triceps Pushdown",               sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Overhead Rope Extension",        sets:"2", reps:"8-10", intensity:"Failure" },
+        ]
+      },
+      {
+        day: "CUMARTESİ", focus: "Sırt · Biceps · Bacak",
+        exercises: [
+          { name:"Barbell Row",                        sets:"3", reps:"6-8",  intensity:"RIR 1-Failure" },
+          { name:"Lat Pulldown",                       sets:"3", reps:"6-8",  intensity:"RIR 1-Failure" },
+          { name:"Romanian Deadlift",                  sets:"2", reps:"5-6",  intensity:"RIR 1-2" },
+          { name:"Cable Curl",                         sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Hammer Curl + Reverse Barbell Curl", sets:"2", reps:"8-10", intensity:"Failure", note:"Super Set" },
+          { name:"Leg Extension",                      sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Seated Leg Curl",                    sets:"1", reps:"8-10", intensity:"Failure" },
+        ]
+      },
+    ]
+  };
+
   const GURAY_PROGRAM = {
     "PAZARTESİ": ["Plate Loaded Chest Press","Smith Machine Low Incline Press","Chest Fly Machine","Shoulder Press Machine","Lateral Raise","Triceps Pushdown","Skullcrusher"],
     "SALI": ["Lat Pulldown","Barbell Row","Cable Row","Dumbbell Curl","Cable Curl","Hammer Curl","Reverse Barbell Curl"],
@@ -441,8 +508,135 @@
     );
   }
 
+  // ── PROGRAMS VIEW ──
+  function ProgramsView({ th, t, onUseProgram }) {
+    const [expandedDay, setExpandedDay] = useState(null);
+    const prog = GURAY_PROGRAM_FULL;
+
+    const focusColor = (focus) => {
+      if (focus.includes("Göğüs")) return "#E84430";
+      if (focus.includes("Sırt")) return "#3B82F6";
+      if (focus.includes("Bacak")) return "#10B981";
+      return th.accent;
+    };
+
+    return (
+      <div style={{ maxWidth:520 }}>
+        {/* Program header card */}
+        <div className="glass" style={{
+          background: `linear-gradient(135deg, ${th.accentBg}, ${th.glass})`,
+          border:`1px solid ${th.accentBorder}`,
+          borderRadius:20, padding:"22px",
+          backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
+          boxShadow:th.glassShadow, marginBottom:14
+        }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
+            <div>
+              <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>HAZIR PROGRAM</p>
+              <h2 style={{ color:th.text, fontSize:20, fontWeight:700, letterSpacing:-0.5, marginBottom:4 }}>{prog.meta.name}</h2>
+              <p style={{ color:th.textSec, fontSize:13 }}>{prog.meta.split}</p>
+            </div>
+            <div style={{ background:th.accent, borderRadius:12, padding:"8px 14px", textAlign:"center", flexShrink:0, boxShadow:`0 4px 12px ${th.accentGlow}` }}>
+              <p style={{ color:"#fff", fontSize:22, fontWeight:700, lineHeight:1 }}>{prog.meta.days}</p>
+              <p style={{ color:"rgba(255,255,255,0.7)", fontSize:10, fontWeight:600 }}>GÜN</p>
+            </div>
+          </div>
+
+          {/* Day pills */}
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
+            {prog.days.map((d,i)=>(
+              <button key={i} onClick={()=>setExpandedDay(expandedDay===i?null:i)} style={{
+                background: expandedDay===i ? th.accent : th.pillBg,
+                border:`1px solid ${expandedDay===i?th.accent:th.divider}`,
+                color: expandedDay===i ? "#fff" : th.text,
+                padding:"6px 14px", cursor:"pointer", borderRadius:20,
+                fontSize:12, fontWeight:expandedDay===i?700:500,
+                transition:"all 0.2s",
+                boxShadow: expandedDay===i?`0 3px 10px ${th.accentGlow}`:"none",
+                backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)",
+              }}>
+                {d.day.charAt(0)+d.day.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={()=>onUseProgram()} className="btn-primary" style={{
+            background:th.accent, border:"none", color:"#fff",
+            padding:"12px", width:"100%", cursor:"pointer",
+            fontSize:14, fontWeight:700, borderRadius:12,
+            boxShadow:`0 4px 14px ${th.accentGlow}`
+          }}>
+            Bu Programı Kullan
+          </button>
+        </div>
+
+        {/* Day detail cards */}
+        {expandedDay !== null && (() => {
+          const d = prog.days[expandedDay];
+          const col = focusColor(d.focus);
+          return (
+            <div className="glass fade-up" style={{
+              background:th.glass, border:`1px solid ${th.glassBorder}`,
+              borderRadius:20, overflow:"hidden",
+              backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
+              boxShadow:th.glassShadow, marginBottom:14
+            }}>
+              {/* Day header */}
+              <div style={{ background:`linear-gradient(135deg, ${col}18, ${col}08)`, borderBottom:`1px solid ${th.divider}`, padding:"16px 20px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <div>
+                    <p style={{ color:col, fontSize:11, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:4 }}>{d.day}</p>
+                    <p style={{ color:th.text, fontSize:16, fontWeight:600 }}>{d.focus}</p>
+                  </div>
+                  <span style={{ background:`${col}20`, color:col, fontSize:12, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>
+                    {d.exercises.length} hareket
+                  </span>
+                </div>
+              </div>
+
+              {/* Exercises */}
+              {d.exercises.map((ex,i)=>(
+                <div key={i} style={{
+                  display:"flex", justifyContent:"space-between", alignItems:"center",
+                  padding:"13px 20px",
+                  borderBottom: i<d.exercises.length-1?`1px solid ${th.divider}`:"none",
+                  background: i%2===0?"transparent":th.pillBg,
+                }}>
+                  <div style={{ flex:1, paddingRight:12 }}>
+                    <p style={{ color:th.text, fontSize:14, fontWeight:500, marginBottom: ex.note?3:0 }}>{ex.name}</p>
+                    {ex.note && <span style={{ background:`${col}15`, color:col, fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:20, letterSpacing:0.5 }}>{ex.note}</span>}
+                  </div>
+                  <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
+                    <span style={{ background:th.tagBg, border:`1px solid ${th.tagBorder}`, color:th.text, fontSize:12, fontWeight:700, padding:"4px 10px", borderRadius:20, whiteSpace:"nowrap" }}>
+                      {ex.sets}×{ex.reps}
+                    </span>
+                    <span style={{ background:ex.intensity==="Failure"?`${col}15`:th.accentBg, border:`1px solid ${ex.intensity==="Failure"?`${col}30`:th.accentBorder}`, color:ex.intensity==="Failure"?col:th.accent, fontSize:11, fontWeight:600, padding:"4px 10px", borderRadius:20, whiteSpace:"nowrap" }}>
+                      {ex.intensity}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {/* Note if any */}
+            </div>
+          );
+        })()}
+
+        {/* Bottom note */}
+        <div className="glass" style={{
+          background:th.pillBg, border:`1px solid ${th.divider}`,
+          borderRadius:14, padding:"12px 16px",
+          backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)"
+        }}>
+          <p style={{ color:th.textSec, fontSize:12, fontWeight:500 }}>{prog.meta.note}</p>
+        </div>
+      </div>
+    );
+  }
+
   // ── PROGRAM VIEW ──
   function ProgramView({ session, customExList, setCustomExList, userProgram, setUserProgram, th, t }) {
+    const [subTab, setSubTab] = useState("programs");
     const [editProgram, setEditProgram] = useState(userProgram || {});
     const [selectedDay, setSelectedDay] = useState("PAZARTESİ");
     const [newExName, setNewExName] = useState("");
@@ -485,8 +679,24 @@
 
     const hasProgram = Object.keys(editProgram).length > 0;
 
+    async function handleUseGuray() {
+      setEditProgram(GURAY_PROGRAM);
+      await saveProgramToDB(GURAY_PROGRAM);
+      setSubTab("mine");
+    }
+
     return (
       <div style={{ maxWidth:520 }}>
+        {/* Sub tab switcher */}
+        <div style={{ display:"flex", background:th.pillBg, borderRadius:14, padding:3, marginBottom:16, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
+          {[["programs","Programlar"],["mine","Programım"]].map(([k,lb])=>(
+            <button key={k} onClick={()=>setSubTab(k)} style={{ flex:1, background:subTab===k?th.glass:"transparent", border:`1px solid ${subTab===k?th.glassBorder:"transparent"}`, color:subTab===k?th.text:th.textSec, fontSize:13, fontWeight:subTab===k?700:500, padding:"10px", cursor:"pointer", borderRadius:12, backdropFilter:subTab===k?"blur(12px)":"none", WebkitBackdropFilter:subTab===k?"blur(12px)":"none", transition:"all 0.2s", boxShadow:subTab===k?th.glassShadow:"none" }}>{lb}</button>
+          ))}
+        </div>
+
+        {subTab==="programs" && <ProgramsView th={th} t={t} onUseProgram={handleUseGuray} />}
+
+        {subTab==="mine" && <div>
         <GlassCard th={th}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
             <div>
@@ -551,7 +761,9 @@
           )}
         </GlassCard>
 
-        {customExList.length > 0 && (
+        </div>}
+
+        {subTab==="mine" && customExList.length > 0 && (
           <GlassCard th={th} style={{ marginTop:16 }}>
             <h3 style={{ fontWeight:700, fontSize:16, color:th.text, marginBottom:4 }}>{t.myCustomEx}</h3>
             <p style={{ color:th.textSec, fontSize:13, marginBottom:16 }}>{t.customExDesc}</p>
