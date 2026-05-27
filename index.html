@@ -227,7 +227,7 @@
       resetDone:"✓ Şifren güncellendi!", fillAll:"Tüm alanları doldur (min. 6 karakter şifre).",
       passwordsMismatch:"Şifreler eşleşmiyor.", loginError:"E-posta veya şifre hatalı.",
       accountCreated:"✓ Hesap oluşturuldu! Giriş yap.", atLeast6:"En az 6 karakter.",
-      save:"Kaydet", history:"Geçmiş", progress:"İlerleme", program:"Program", settings:"Ayarlar",
+      save:"Kaydet", daily:"Günlük", history:"Geçmiş", progress:"İlerleme", program:"Program", settings:"Ayarlar",
       date:"Tarih", trainingDay:"Program Günü", exercise:"Egzersiz", sets:"Setler",
       addSet:"+ Set Ekle", saving:"Kaydediliyor...", saved:"✓ Kaydedildi!",
       kg:"kg", reps:"tekrar", rir:"rir", setNum:"#",
@@ -254,7 +254,7 @@
       rememberMe:"Beni hatırla", changeDay:"Farklı gün seç", autoDay:"otomatik",
       presetPrograms:"Hazır Programlar", communityPrograms:"Topluluk Programları", presetProgram:"HAZIR PROGRAM", useProgram:"Bu Programı Kullan",
       clearProgram:"Tümünü Temizle", saveAsNew:"Programı Kaydet", savedPrograms:"Kayıtlı Programlar", programNameLabel2:"Program adı gir", myBadge:"Benim",
-      programNote:"Program Notu", programNotePh:"ör. Her 2 antrenman sonunda 3×10 Cable Crunch...",
+      programNote:"Program Notu", deleteDay:"Bu günün tüm antrenmanları silinsin mi?", programNotePh:"ör. Her 2 antrenman sonunda 3×10 Cable Crunch...",
       saveProgram2:"Programı Paylaş", programNamePh:"ör. Güç Programı", programNameLabel:"Program Adı",
       shareSuccess:"✓ Program paylaşıldı!", confirmDelete:"Bu programı silmek istiyor musun?",
       newPassword:"Yeni Şifre", newPasswordRepeat:"Şifre Tekrar",
@@ -269,7 +269,7 @@
       resetDone:"✓ Password updated!", fillAll:"Fill all fields (min. 6 char password).",
       passwordsMismatch:"Passwords don't match.", loginError:"Invalid email or password.",
       accountCreated:"✓ Account created! Log in.", atLeast6:"At least 6 characters.",
-      save:"Save", history:"History", progress:"Progress", program:"Program", settings:"Settings",
+      save:"Save", daily:"Daily", history:"History", progress:"Progress", program:"Program", settings:"Settings",
       date:"Date", trainingDay:"Training Day", exercise:"Exercise", sets:"Sets",
       addSet:"+ Add Set", saving:"Saving...", saved:"✓ Saved!",
       kg:"kg", reps:"reps", rir:"rir", setNum:"#",
@@ -296,7 +296,7 @@
       rememberMe:"Remember me", changeDay:"Change day", autoDay:"auto",
       presetPrograms:"Preset Programs", communityPrograms:"Community Programs", presetProgram:"PRESET PROGRAM", useProgram:"Use This Program",
       clearProgram:"Clear All", saveAsNew:"Save Program", savedPrograms:"My Programs", programNameLabel2:"Enter program name", myBadge:"Mine",
-      programNote:"Program Note", programNotePh:"e.g. After every 2 sessions: 3×10 Cable Crunch...",
+      programNote:"Program Note", deleteDay:"Delete all workouts for this day?", programNotePh:"e.g. After every 2 sessions: 3×10 Cable Crunch...",
       saveProgram2:"Share Program", programNamePh:"e.g. Strength Program", programNameLabel:"Program Name",
       shareSuccess:"✓ Program shared!", confirmDelete:"Do you want to delete this program?",
       newPassword:"New Password", newPasswordRepeat:"Repeat Password",
@@ -1084,6 +1084,14 @@
         setTimeout(()=>setSavedAnim(false), 2000);
       }
       setLoading(false);
+    }
+
+    async function deleteDay(date) {
+      if (!window.confirm(t.deleteDay)) return;
+      const ids = byDate[date]?.map(l=>l.id) || [];
+      await sb.from("workouts").delete().in("id", ids);
+      setLogs(prev=>prev.filter(l=>!ids.includes(l.id)));
+      setExpanded(p=>({...p,[date]:false}));
     }
 
     async function deleteEntry(id) {
