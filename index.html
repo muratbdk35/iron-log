@@ -837,7 +837,7 @@
               <div style={{ display:"flex", gap:8, alignItems:"center" }}>
                 {saveMsg && <span style={{ color:th.green, fontSize:13, fontWeight:600 }}>{saveMsg}</span>}
                 <div style={{ display:"flex", gap:6 }}>
-                  {hasProgram && <button onClick={()=>setShowSaveName(!showSaveName)} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"8px 12px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:12, transition:"all 0.2s" }}>{t.saveAsNew}</button>}
+                  {hasProgram && <button onClick={()=>setShowSaveName(!showSaveName)} style={{ background:showSaveName?th.accentBg:th.pillBg, border:`1.5px solid ${showSaveName?th.accent:th.divider}`, color:showSaveName?th.accent:th.textSec, padding:"8px 14px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:20, transition:"all 0.2s", letterSpacing:0.3 }}>🔖 {t.saveAsNew}</button>}
                   {hasProgram && <button onClick={()=>saveProgramToDB(editProgram)} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 14px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:12, boxShadow:`0 4px 12px ${th.accentGlow}` }}>{t.saveProgram}</button>}
                 </div>
               </div>
