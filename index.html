@@ -646,7 +646,7 @@
     // savedProgs stored alongside active program in user_programs as {active, saved:[]}
     const savedProgs = userProgram?._saved || [];
 
-    useEffect(() => { setEditProgram(userProgram?._active || userProgram || {}); }, [userProgram]);
+    useEffect(() => { const p = userProgram?._active || userProgram || {}; const clean = {}; Object.keys(p).filter(k=>!k.startsWith('_')&&k!=='program').forEach(k=>clean[k]=p[k]); setEditProgram(Object.keys(clean).length?clean:(p.program||{})); }, [userProgram]);
 
     async function saveProgramToDB(prog) {
       const payload = { ...(userProgram||{}), _active: prog, program: prog };
@@ -664,18 +664,23 @@
     async function saveAsNewProgram() {
       const name = saveName.trim();
       if (!name || !hasProgram) return;
-      const newSaved = [...savedProgs, { name, program: editProgram }];
-      const payload = { ...(userProgram||{}), _active:editProgram, _saved:newSaved, program:editProgram };
-      await sb.from("user_programs").upsert({ user_id:session.user.id, program:payload }, { onConflict:"user_id" });
-      setUserProgram(payload); setSaveName(""); setShowSaveName(false);
-      setSaveMsg("✓"); setTimeout(()=>setSaveMsg(""), 2000);
+      const currentSaved = userProgram?._saved || [];
+      const newSaved = [...currentSaved, { name, program: editProgram }];
+      const payload = { _active: editProgram, _saved: newSaved, program: editProgram };
+      const { error } = await sb.from("user_programs").upsert({ user_id:session.user.id, program:payload }, { onConflict:"user_id" });
+      if (!error) {
+        setUserProgram(payload);
+        setSaveName(""); setShowSaveName(false);
+        setSaveMsg("✓"); setTimeout(()=>setSaveMsg(""), 2000);
+      }
     }
 
     async function deleteSavedProgram(idx) {
-      const newSaved = savedProgs.filter((_,i)=>i!==idx);
+      const currentSaved = userProgram?._saved || [];
+      const newSaved = currentSaved.filter((_,i)=>i!==idx);
       const payload = { ...(userProgram||{}), _saved:newSaved };
-      await sb.from("user_programs").upsert({ user_id:session.user.id, program:payload }, { onConflict:"user_id" });
-      setUserProgram(payload);
+      const { error } = await sb.from("user_programs").upsert({ user_id:session.user.id, program:payload }, { onConflict:"user_id" });
+      if (!error) setUserProgram(payload);
     }
 
     function addExToDay() {
@@ -732,7 +737,6 @@
               <div style={{ display:"flex", gap:8, alignItems:"center" }}>
                 {saveMsg && <span style={{ color:th.green, fontSize:13, fontWeight:600 }}>{saveMsg}</span>}
                 <div style={{ display:"flex", gap:6 }}>
-                  {hasProgram && <button onClick={clearProgram} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"8px 12px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:12, transition:"all 0.2s" }}>{t.clearProgram}</button>}
                   {hasProgram && <button onClick={()=>setShowSaveName(!showSaveName)} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"8px 12px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:12, transition:"all 0.2s" }}>💾</button>}
                   {hasProgram && <button onClick={()=>saveProgramToDB(editProgram)} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 14px", cursor:"pointer", fontSize:12, fontWeight:600, borderRadius:12, boxShadow:`0 4px 12px ${th.accentGlow}` }}>{t.saveProgram}</button>}
                 </div>
@@ -750,7 +754,10 @@
             )}
 
             <div style={{ marginBottom:12 }}>
-              <label style={{ display:"block", color:th.textMuted, fontSize:10, fontWeight:700, letterSpacing:1.5, marginBottom:8, textTransform:"uppercase" }}>{t.selectDay}</label>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                <label style={{ color:th.textMuted, fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase" }}>{t.selectDay}</label>
+                {hasProgram && <button onClick={clearProgram} style={{ background:"none", border:"none", color:th.accent, fontSize:11, cursor:"pointer", padding:0, borderBottom:`1px solid ${th.accent}` }}>{t.clearProgram}</button>}
+              </div>
               <GlassSelect th={th} value={selectedDay} onChange={e=>setSelectedDay(e.target.value)}>
                 {DAYS.filter(d=>d!=="DİĞER").map(d=><option key={d} value={d}>{t.days[d]||d}</option>)}
               </GlassSelect>
