@@ -1130,46 +1130,36 @@
             {view==="log" && (
               <div style={{ maxWidth:520, width:"100%" }}>
                 <GlassCard th={th} style={{ marginBottom:12 }}>
-                  <Label th={th}>{t.date}</Label>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                    <Label th={th} style={{ marginBottom:0 }}>{t.date}</Label>
+                    {!overrideDay ? (
+                      <button onClick={()=>setOverrideDay(true)} style={{ background:"none", border:"none", color:th.textSec, fontSize:11, cursor:"pointer", padding:0, textDecoration:"underline" }}>{t.changeDay}</button>
+                    ) : (
+                      <button onClick={()=>{ setOverrideDay(false); setProgramDay(DATE_TO_DAY[new Date(date+"T12:00:00").getDay()]); setExercise(""); }} style={{ background:"none", border:"none", color:th.accent, fontSize:11, cursor:"pointer", padding:0 }}>{t.autoDay} ↩</button>
+                    )}
+                  </div>
                   <input
                     type="date"
                     value={date}
-                    onChange={e=>setDate(e.target.value)}
-                    style={{
-                      display:"block",
-                      width:"100%",
-                      maxWidth:"100%",
-                      boxSizing:"border-box",
-                      background:th.inputBg,
-                      border:`1.5px solid ${th.inputBorder}`,
-                      color:th.text,
-                      padding:"11px 14px",
-                      fontSize:15,
-                      borderRadius:12,
-                      outline:"none",
-                      WebkitAppearance:"none",
-                      appearance:"none",
-                      margin:0,
-                    }}
+                    onChange={e=>{ setDate(e.target.value); if(!overrideDay){ setProgramDay(DATE_TO_DAY[new Date(e.target.value+"T12:00:00").getDay()]); setExercise(""); } }}
+                    style={{ display:"block", width:"100%", maxWidth:"100%", boxSizing:"border-box", background:th.inputBg, border:`1.5px solid ${th.inputBorder}`, color:th.text, padding:"11px 14px", fontSize:15, borderRadius:12, outline:"none", WebkitAppearance:"none", appearance:"none", margin:0 }}
                     onFocus={e=>{ e.target.style.borderColor=th.accent; }}
                     onBlur={e=>{ e.target.style.borderColor=th.inputBorder; }}
                   />
-                </GlassCard>
-
-                <GlassCard th={th} style={{ marginBottom:12 }}>
-                  <Label th={th}>{t.trainingDay}</Label>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
-                    {DAYS.filter(d=>d!=="DİĞER").map(d=>{
-                      const hasExs = (activeProgram[d]||[]).length>0 || customExList.some(e=>e.day===d);
-                      if (!hasExs) return null;
-                      const isActive = programDay===d;
-                      return (
-                        <button key={d} onClick={()=>{ setProgramDay(d); setExercise(""); }} style={{ background:isActive?th.accent:th.pillBg, border:`1px solid ${isActive?th.accent:th.divider}`, color:isActive?"#fff":th.text, padding:"7px 13px", cursor:"pointer", borderRadius:20, fontSize:12, fontWeight:isActive?700:500, transition:"all 0.2s", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", boxShadow:isActive?`0 3px 10px ${th.accentGlow}`:"none" }}>
-                          {t.days[d] || d}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {overrideDay && (
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginTop:10 }}>
+                      {DAYS.filter(d=>d!=="DİĞER").map(d=>{
+                        const hasExs = (activeProgram[d]||[]).length>0 || customExList.some(e=>e.day===d);
+                        if (!hasExs) return null;
+                        const isActive = programDay===d;
+                        return (
+                          <button key={d} onClick={()=>{ setProgramDay(d); setExercise(""); }} style={{ background:isActive?th.accent:th.pillBg, border:`1px solid ${isActive?th.accent:th.divider}`, color:isActive?"#fff":th.text, padding:"6px 12px", cursor:"pointer", borderRadius:20, fontSize:12, fontWeight:isActive?700:500, transition:"all 0.2s", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", boxShadow:isActive?`0 3px 10px ${th.accentGlow}`:"none" }}>
+                            {t.days[d]||d}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </GlassCard>
 
                 <GlassCard th={th} style={{ marginBottom:12 }}>
