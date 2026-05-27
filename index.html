@@ -239,7 +239,8 @@
       programsTab:"Programlar", myProgramTab:"Programım",
       days:{"PAZARTESİ":"Pazartesi","SALI":"Salı","ÇARŞAMBA":"Çarşamba","PERŞEMBE":"Perşembe","CUMA":"Cuma","CUMARTESİ":"Cumartesi","PAZAR":"Pazar","DİĞER":"Diğer"},
       gurayProgram:"Guray's Hypertrophy Max", gurayDesc:"Hazır program — tek tıkla",
-      use:"Kullan", orManual:"ya da elle gir", selectDay:"Gün Seç",
+      focus:{"Göğüs · Omuz · Triceps":"Chest · Shoulder · Triceps","Sırt · Biceps":"Back · Biceps","Bacak":"Legs","Sırt · Biceps · Bacak":"Back · Biceps · Legs"},
+      use:"Kullan", presetProgram:"HAZIR PROGRAM", days_label:"GÜN", useProgram:"Bu Programı Kullan", orManual:"ya da elle gir", selectDay:"Gün Seç",
       exPh:"ör. Bench Press", saveProgram:"Kaydet", savedMsg:"✓ Kaydedildi!",
       noProgram:"Gün seç ve egzersiz ekle", myCustomEx:"Özel Egzersizlerim",
       customExDesc:"İsim değiştir veya sil", edit:"Düzenle", cancel:"İptal",
@@ -274,7 +275,8 @@
       programsTab:"Programs", myProgramTab:"My Program",
       days:{"PAZARTESİ":"Monday","SALI":"Tuesday","ÇARŞAMBA":"Wednesday","PERŞEMBE":"Thursday","CUMA":"Friday","CUMARTESİ":"Saturday","PAZAR":"Sunday","DİĞER":"Other"},
       gurayProgram:"Guray's Hypertrophy Max", gurayDesc:"Preset program — one click",
-      use:"Use", orManual:"or enter manually", selectDay:"Select Day",
+      focus:{"Göğüs · Omuz · Triceps":"Chest · Shoulder · Triceps","Sırt · Biceps":"Back · Biceps","Bacak":"Legs","Sırt · Biceps · Bacak":"Back · Biceps · Legs"},
+      use:"Use", presetProgram:"PRESET PROGRAM", days_label:"DAYS", useProgram:"Use This Program", orManual:"or enter manually", selectDay:"Select Day",
       exPh:"e.g. Bench Press", saveProgram:"Save", savedMsg:"✓ Saved!",
       noProgram:"Select a day and add exercises", myCustomEx:"My Custom Exercises",
       customExDesc:"Rename or delete", edit:"Edit", cancel:"Cancel",
@@ -553,13 +555,13 @@
         }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
             <div>
-              <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>HAZIR PROGRAM</p>
+              <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>{t.presetProgram}</p>
               <h2 style={{ color:th.text, fontSize:20, fontWeight:700, letterSpacing:-0.5, marginBottom:4 }}>{prog.meta.name}</h2>
               <p style={{ color:th.textSec, fontSize:13 }}>{prog.meta.split}</p>
             </div>
             <div style={{ background:th.accent, borderRadius:12, padding:"8px 14px", textAlign:"center", flexShrink:0, boxShadow:`0 4px 12px ${th.accentGlow}` }}>
               <p style={{ color:"#fff", fontSize:22, fontWeight:700, lineHeight:1 }}>{prog.meta.days}</p>
-              <p style={{ color:"rgba(255,255,255,0.7)", fontSize:10, fontWeight:600 }}>GÜN</p>
+              <p style={{ color:"rgba(255,255,255,0.7)", fontSize:10, fontWeight:600 }}>{t.days_label}</p>
             </div>
           </div>
 
@@ -587,7 +589,7 @@
             fontSize:14, fontWeight:700, borderRadius:12,
             boxShadow:`0 4px 14px ${th.accentGlow}`
           }}>
-            Bu Programı Kullan
+            {t.useProgram}
           </button>
         </div>
 
@@ -607,7 +609,7 @@
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                   <div>
                     <p style={{ color:col, fontSize:11, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:4 }}>{t.days[d.day]||d.day}</p>
-                    <p style={{ color:th.text, fontSize:16, fontWeight:600 }}>{d.focus}</p>
+                    <p style={{ color:th.text, fontSize:16, fontWeight:600 }}>{t.focus[d.focus]||d.focus}</p>
                   </div>
                   <span style={{ background:`${col}20`, color:col, fontSize:12, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>
                     {d.exercises.length} hareket
