@@ -388,7 +388,7 @@
         <BgOrbs th={th} />
         <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:380 }}>
           <div style={{ textAlign:"center", marginBottom:40 }}>
-            <img src="repmax.png" alt="Repmax" style={{ width:180 }} />
+            <img src="repmax.png" alt="Repmax" style={{ width:240, display:"block", margin:"0 auto" }} />
           </div>
           <GlassCard th={th}>
             <h3 style={{ fontWeight:700, fontSize:20, color:th.text, marginBottom:6 }}>{t.setNewPassword}</h3>
@@ -453,7 +453,7 @@
         <BgOrbs th={th} />
         <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:380 }}>
           <div style={{ textAlign:"center", marginBottom:40 }}>
-            <img src="repmax.png" alt="Repmax" style={{ width:180, marginBottom:6 }} />
+            <img src="repmax.png" alt="Repmax" style={{ width:240, marginBottom:16, display:"block", margin:"0 auto 16px" }} />
             <p style={{ color:th.textSec, fontSize:11, letterSpacing:3, fontWeight:500 }}>{t.appSub}</p>
           </div>
 
@@ -1074,7 +1074,7 @@
       <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:th.bgGrad, position:"relative", overflow:"hidden" }}>
         <BgOrbs th={th} />
         <div style={{ position:"relative", zIndex:1, overflowX:"hidden", width:"100%" }}>
-          <img src="repmax.png" alt="Repmax" style={{ width:180 }} />
+          <img src="repmax.png" alt="Repmax" style={{ width:240, display:"block", margin:"0 auto" }} />
         </div>
       </div>
     );
@@ -1088,9 +1088,7 @@
           {/* Header */}
           <div className="glass" style={{ background:th.headerGlass, borderBottom:`1px solid ${th.headerBorder}`, backdropFilter:"blur(30px)", WebkitBackdropFilter:"blur(30px)", position:"sticky", top:0, zIndex:100 }}>
             <div style={{ maxWidth:720, margin:"0 auto", padding:"0 20px", height:56, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-              <h1 style={{ fontSize:20, fontWeight:700, color:th.text, letterSpacing:-0.5 }}>
-                REPMAX
-              </h1>
+              <img src="repmax.png" alt="Repmax" style={{ height:26 }} />
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                 <span style={{ color:th.textSec, fontSize:13, fontWeight:500 }}>{username}</span>
                 <button onClick={()=>sb.auth.signOut()} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, fontSize:12, fontWeight:600, padding:"5px 12px", cursor:"pointer", borderRadius:20, transition:"all 0.2s", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
