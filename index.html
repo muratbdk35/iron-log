@@ -557,6 +557,7 @@
 
   function ProgramsView({ th, t, lang, onUseProgram, savedProgs, onDeleteSaved }) {
     const [expandedDay, setExpandedDay] = useState(null);
+    const [expandedSaved, setExpandedSaved] = useState(null);
     const prog = GURAY_PROGRAM_FULL;
 
     const focusColor = (focus) => {
@@ -645,10 +646,10 @@
           <div style={{ marginTop:16 }}>
             <p style={{ color:th.textMuted, fontSize:10, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:10 }}>{t.savedPrograms}</p>
             {savedProgs.map((sp, i) => {
-              const isExpanded = expandedDay === `saved-${i}`;
+              const isExpanded = expandedSaved === i;
               return (
                 <div key={i} style={{ marginBottom:8 }}>
-                  <button onClick={()=>setExpandedDay(isExpanded?null:`saved-${i}`)} style={{ width:"100%", background:"none", border:"none", cursor:"pointer", textAlign:"left", padding:0 }}>
+                  <button onClick={()=>setExpandedSaved(isExpanded?null:i)} style={{ width:"100%", background:"none", border:"none", cursor:"pointer", textAlign:"left", padding:0 }}>
                     <div className="glass" style={{ background:th.glass, border:`1px solid ${th.glassBorder}`, borderRadius:isExpanded?"14px 14px 0 0":14, padding:"16px 18px", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", boxShadow:th.glassShadow }}>
                       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                         <div>
@@ -1057,7 +1058,13 @@
       if (data?.program) setUserProgram(data.program);
     }
 
-    const activeProgram = userProgram || {};
+    const activeProgram = (() => {
+      if (!userProgram) return {};
+      const p = userProgram._active || userProgram;
+      const clean = {};
+      Object.keys(p).filter(k=>!k.startsWith('_')&&k!=='program').forEach(k=>clean[k]=p[k]);
+      return Object.keys(clean).length ? clean : (p.program || p);
+    })();
 
     function addSet() {
       const lastWeight = sets[sets.length-1]?.weight || "";
