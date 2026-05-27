@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iron Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body { font-family: 'DM Sans', sans-serif; min-height: 100%; transition: background 0.4s; overflow-x: hidden; }
+    input, select, button, textarea { font-family: 'DM Sans', sans-serif; }
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    select option, select optgroup { font-family: 'DM Sans', sans-serif; }
+    ::-webkit-scrollbar { width: 3px; height: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { border-radius: 10px; background: rgba(128,128,128,0.2); }
+
+    /* Background orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      transition: all 0.6s ease;
+    }
+
+    /* Glass card */
+    .glass {
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      transition: background 0.3s, border 0.3s, box-shadow 0.3s;
+    }
+
+    /* Animations */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+    .fade-up { animation: fadeUp 0.25s ease forwards; }
+
+    /* Tab sliding indicator */
+    @keyframes tabSlide { from { opacity:0; transform:scaleX(0.6); } to { opacity:1; transform:scaleX(1); } }
+    input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    @media (max-width: 480px) {
+      input[type="date"] { font-size: 14px !important; }
+      input[type="number"] { font-size: 14px !important; }
+      select { font-size: 14px !important; }
+    }
+
+    /* Ripple on buttons */
+    .btn-primary {
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0px); }
+  </style>
+</head>
+<body>
+<div id="root" style="position:relative; z-index:1;"></div>
+<script type="text/babel">
+  const { useState, useEffect, useRef } = React;
+
+  const SUPABASE_URL = "https://kwvbkilslrbjtzfllxvc.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_AS7xt1EBxhNRuWS1vaVaqw_RBwYdcK_";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const DAYS = ["PAZARTESİ","SALI","ÇARŞAMBA","PERŞEMBE","CUMA","CUMARTESİ","PAZAR","DİĞER"];
+  const DATE_TO_DAY = ["PAZAR","PAZARTESİ","SALI","ÇARŞAMBA","PERŞEMBE","CUMA","CUMARTESİ"];
+
+  const GURAY_PROGRAM_FULL = {
+    meta: {
+      name: "Guray's Hypertrophy Max",
+      split: "Push · Pull · Legs · Push · Pull",
+      days: 5,
+      note: "*Her 2 antrenman sonunda: 3×10 Cable Crunch / 3×10 Standing Calf Raise"
+    },
+    days: [
+      {
+        day: "PAZARTESİ", focus: "Göğüs · Omuz · Triceps",
+        exercises: [
+          { name:"Plate Loaded Chest Press",      sets:"2", reps:"5-6",  intensity:"RIR 1" },
+          { name:"Smith Machine Low Incline Press",sets:"2", reps:"5-6",  intensity:"RIR 1" },
+          { name:"Chest Fly Machine",              sets:"1", reps:"6-8",  intensity:"Failure" },
+          { name:"Shoulder Press Machine",         sets:"2", reps:"6-8",  intensity:"RIR 1" },
+          { name:"Lateral Raise",                  sets:"3", reps:"8-10", intensity:"Failure" },
+          { name:"Triceps Pushdown",               sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Overhead Rope Extension",        sets:"2", reps:"8-10", intensity:"Failure" },
+        ]
+      },
+      {
+        day: "SALI", focus: "Sırt · Biceps",
+        exercises: [
+          { name:"Lat Pulldown",                           sets:"2", reps:"6-8",  intensity:"RIR 1-Failure" },
+          { name:"Barbell Row",                            sets:"3", reps:"6-8",  intensity:"RIR 1-Failure" },
+          { name:"Cable Row",                              sets:"1", reps:"8-10", intensity:"Failure" },
+          { name:"Dumbbell Curl",                          sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Cable Curl",                             sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Hammer Curl + Reverse Barbell Curl",     sets:"2", reps:"8-10", intensity:"Failure", note:"Super Set" },
+        ]
+      },
+      {
+        day: "ÇARŞAMBA", focus: "Bacak",
+        exercises: [
+          { name:"Leg Press",       sets:"2", reps:"6-8",  intensity:"RIR 1-2" },
+          { name:"Hack Squat",      sets:"2", reps:"6-8",  intensity:"RIR 1-2" },
+          { name:"Leg Extension",   sets:"2", reps:"8-10", intensity:"Failure" },
+          { name:"Seated Leg Curl", sets:"3", reps:"8-10", intensity:"RIR 1" },
+        ]
+      },
+      {
+        day: "CUMA", focus: "Göğüs · Omuz · Triceps",
+        exercises: [
+          { name:"Shoulder Press Machine",         sets:"2", reps:"6-8",  intensity:"RIR 1" },
+          { name:"Lateral Raise",                  sets:"3", reps:"8-10", intensity:"Failure" },
+          { name:"Smith Machine Low Incline Press",sets:"2", reps:"5-6",  intensity:"RIR 1" },
+          { name:"Chest Fly Machine",              sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Cable Rear Delt Fly",            sets:"2", reps:"8-10", intensity:"Failure" },
+          { name:"Triceps Pushdown",               sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Overhead Rope Extension",        sets:"2", reps:"8-10", intensity:"Failure" },
+        ]
+      },
+      {
+        day: "CUMARTESİ", focus: "Sırt · Biceps · Bacak",
+        exercises: [
+          { name:"Barbell Row",                        sets:"3", reps:"6-8",  intensity:"RIR 1-Failure" },
+          { name:"Lat Pulldown",                       sets:"3", reps:"6-8",  intensity:"RIR 1-Failure" },
+          { name:"Romanian Deadlift",                  sets:"2", reps:"5-6",  intensity:"RIR 1-2" },
+          { name:"Cable Curl",                         sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Hammer Curl + Reverse Barbell Curl", sets:"2", reps:"8-10", intensity:"Failure", note:"Super Set" },
+          { name:"Leg Extension",                      sets:"2", reps:"6-8",  intensity:"Failure" },
+          { name:"Seated Leg Curl",                    sets:"1", reps:"8-10", intensity:"Failure" },
+        ]
+      },
+    ]
+  };
+
+  const GURAY_PROGRAM = {
+    "PAZARTESİ": ["Plate Loaded Chest Press","Smith Machine Low Incline Press","Chest Fly Machine","Shoulder Press Machine","Lateral Raise","Triceps Pushdown","Skullcrusher"],
+    "SALI": ["Lat Pulldown","Barbell Row","Cable Row","Dumbbell Curl","Cable Curl","Hammer Curl","Reverse Barbell Curl"],
+    "ÇARŞAMBA": ["Leg Press","Hack Squat","Leg Extension","Seated Leg Curl"],
+    "CUMA": ["Shoulder Press Machine","Lateral Raise","Smith Machine Low Incline Press","Chest Fly Machine","Cable Rear Delt Fly","Triceps Pushdown","Skullcrusher"],
+    "CUMARTESİ": ["Barbell Row","Lat Pulldown","Romanian Deadlift","Cable Curl","Hammer Curl","Reverse Barbell Curl","Leg Extension","Seated Leg Curl"],
+    "DİĞER": ["Cable Crunch","Standing Calf Raise"],
+  };
+
+  // ── THEME ──
+  const THEMES = {
+    light: {
+      // background
+      bgGrad: "linear-gradient(135deg, #F5F0EB 0%, #EDE8E2 50%, #E8E2DB 100%)",
+      orb1: "rgba(255,180,150,0.5)", orb2: "rgba(255,140,140,0.35)", orb3: "rgba(255,210,180,0.4)",
+      // glass
+      glass: "rgba(255,255,255,0.58)",
+      glassBorder: "rgba(255,255,255,0.75)",
+      glassShadow: "0 4px 24px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.8)",
+      glassHeavy: "rgba(255,255,255,0.72)",
+      glassHeavyBorder: "rgba(255,255,255,0.9)",
+      // header
+      headerGlass: "rgba(245,240,235,0.78)",
+      headerBorder: "rgba(255,255,255,0.6)",
+      // inputs
+      inputBg: "rgba(255,255,255,0.5)",
+      inputBorder: "rgba(0,0,0,0.08)",
+      inputFocus: "rgba(232,68,48,0.5)",
+      // text
+      text: "#1C1917", textSec: "#7A7370", textMuted: "#B8B0AA",
+      // accent
+      accent: "#E84430", accentGlow: "rgba(232,68,48,0.25)",
+      accentBg: "rgba(232,68,48,0.08)", accentBorder: "rgba(232,68,48,0.2)",
+      // misc
+      divider: "rgba(0,0,0,0.07)",
+      tagBg: "rgba(255,255,255,0.6)", tagBorder: "rgba(0,0,0,0.06)",
+      green: "#16a34a", greenBg: "rgba(22,163,74,0.1)",
+      navActive: "#E84430", navInactive: "#B8B0AA",
+      pillBg: "rgba(0,0,0,0.05)",
+      danger: "#E84430", dangerBg: "rgba(232,68,48,0.06)", dangerBorder: "rgba(232,68,48,0.15)",
+      barBg: "rgba(0,0,0,0.06)",
+    },
+    dark: {
+      bgGrad: "linear-gradient(135deg, #0A0A0F 0%, #0F0B14 50%, #0D0A12 100%)",
+      orb1: "rgba(180,40,30,0.3)", orb2: "rgba(80,30,120,0.25)", orb3: "rgba(30,50,120,0.2)",
+      glass: "rgba(255,255,255,0.05)",
+      glassBorder: "rgba(255,255,255,0.09)",
+      glassShadow: "0 4px 24px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)",
+      glassHeavy: "rgba(255,255,255,0.07)",
+      glassHeavyBorder: "rgba(255,255,255,0.12)",
+      headerGlass: "rgba(10,10,15,0.7)",
+      headerBorder: "rgba(255,255,255,0.07)",
+      inputBg: "rgba(255,255,255,0.04)",
+      inputBorder: "rgba(255,255,255,0.1)",
+      inputFocus: "rgba(232,68,48,0.6)",
+      text: "#E8E4DC", textSec: "#6B6560", textMuted: "#3A3530",
+      accent: "#E84430", accentGlow: "rgba(232,68,48,0.3)",
+      accentBg: "rgba(232,68,48,0.1)", accentBorder: "rgba(232,68,48,0.25)",
+      divider: "rgba(255,255,255,0.06)",
+      tagBg: "rgba(255,255,255,0.04)", tagBorder: "rgba(255,255,255,0.08)",
+      green: "#4ade80", greenBg: "rgba(74,222,128,0.1)",
+      navActive: "#E84430", navInactive: "#3A3530",
+      pillBg: "rgba(255,255,255,0.04)",
+      danger: "#E84430", dangerBg: "rgba(232,68,48,0.06)", dangerBorder: "rgba(232,68,48,0.15)",
+      barBg: "rgba(255,255,255,0.06)",
+    }
+  };
+
+  const LANGS = {
+    tr: {
+      appSub:"HYPERTROPHY TRACKER",
+      login:"Giriş Yap", signup:"Kayıt Ol", logout:"Çıkış",
+      username:"Kullanıcı Adı", email:"E-Posta", password:"Şifre", passwordRepeat:"Şifre Tekrar",
+      usernamePh:"guray", emailPh:"ornek@mail.com", passwordPh:"••••••••",
+      forgotPassword:"Şifremi unuttum", sendLink:"Link Gönder", setNewPassword:"Yeni Şifre",
+      updatePassword:"Güncelle", resetSent:"✓ Link e-postana gönderildi!",
+      resetDone:"✓ Şifren güncellendi!", fillAll:"Tüm alanları doldur (min. 6 karakter şifre).",
+      passwordsMismatch:"Şifreler eşleşmiyor.", loginError:"E-posta veya şifre hatalı.",
+      accountCreated:"✓ Hesap oluşturuldu! Giriş yap.", atLeast6:"En az 6 karakter.",
+      save:"Kaydet", history:"Geçmiş", progress:"İlerleme", program:"Program", settings:"Ayarlar",
+      date:"Tarih", trainingDay:"Program Günü", exercise:"Egzersiz", sets:"Setler",
+      addSet:"+ Set Ekle", saving:"Kaydediliyor...", saved:"✓ Kaydedildi!",
+      kg:"kg", reps:"tekrar", rir:"rir", setNum:"#",
+      selectEx:"— Egzersiz seç —", addNewEx:"✏️ Yeni egzersiz ekle",
+      whichDay:"Hangi Güne?", exName:"Egzersiz Adı", exNamePh:"ör. Face Pull",
+      enterOrPlus:"Enter veya + → kalıcı eklenir", today:"bugün",
+      noWorkouts:"Henüz antrenman yok", exercises:"egzersiz", noData:"Henüz veri yok",
+      allExercises:"Tümü", bestRM:"En İyi 1RM", sessions:"Seans", lastRM:"Son 1RM",
+      myProgram:"Programım", programDesc:"Günlere egzersiz ekle veya hazır program kullan",
+      gurayProgram:"Guray's Hypertrophy Max", gurayDesc:"Hazır program — tek tıkla",
+      use:"Kullan", orManual:"ya da elle gir", selectDay:"Gün Seç",
+      exPh:"ör. Bench Press", saveProgram:"Kaydet", savedMsg:"✓ Kaydedildi!",
+      noProgram:"Gün seç ve egzersiz ekle", myCustomEx:"Özel Egzersizlerim",
+      customExDesc:"İsim değiştir veya sil", edit:"Düzenle", cancel:"İptal",
+      changeUsername:"Kullanıcı Adı", changeUsernameDesc:"Görünen adını değiştir",
+      theme:"Tema", themeDesc:"Arayüz rengi", light:"Açık", dark:"Koyu",
+      language:"Dil", langDesc:"Uygulama dili",
+      deleteAccount:"Hesabı Sil", deleteAccountDesc:"Tüm verilerini ve hesabını kalıcı sil.",
+      deleteConfirm:"Onaylamak için \"DELETE\" yaz:", deleteType:"DELETE",
+      deleteBtn:"Kalıcı Olarak Sil", deleting:"Siliniyor...", back:"← Geri",
+      newPassword:"Yeni Şifre", newPasswordRepeat:"Şifre Tekrar",
+    },
+    en: {
+      appSub:"HYPERTROPHY TRACKER",
+      login:"Log In", signup:"Sign Up", logout:"Log Out",
+      username:"Username", email:"Email", password:"Password", passwordRepeat:"Repeat Password",
+      usernamePh:"guray", emailPh:"example@mail.com", passwordPh:"••••••••",
+      forgotPassword:"Forgot password", sendLink:"Send Link", setNewPassword:"New Password",
+      updatePassword:"Update", resetSent:"✓ Reset link sent to your email!",
+      resetDone:"✓ Password updated!", fillAll:"Fill all fields (min. 6 char password).",
+      passwordsMismatch:"Passwords don't match.", loginError:"Invalid email or password.",
+      accountCreated:"✓ Account created! Log in.", atLeast6:"At least 6 characters.",
+      save:"Save", history:"History", progress:"Progress", program:"Program", settings:"Settings",
+      date:"Date", trainingDay:"Training Day", exercise:"Exercise", sets:"Sets",
+      addSet:"+ Add Set", saving:"Saving...", saved:"✓ Saved!",
+      kg:"kg", reps:"reps", rir:"rir", setNum:"#",
+      selectEx:"— Select exercise —", addNewEx:"✏️ Add new exercise",
+      whichDay:"Which Day?", exName:"Exercise Name", exNamePh:"e.g. Face Pull",
+      enterOrPlus:"Enter or + → saved permanently", today:"today",
+      noWorkouts:"No workouts yet", exercises:"exercises", noData:"No data yet",
+      allExercises:"All", bestRM:"Best 1RM", sessions:"Sessions", lastRM:"Last 1RM",
+      myProgram:"My Program", programDesc:"Add exercises per day or use a preset",
+      gurayProgram:"Guray's Hypertrophy Max", gurayDesc:"Preset program — one click",
+      use:"Use", orManual:"or enter manually", selectDay:"Select Day",
+      exPh:"e.g. Bench Press", saveProgram:"Save", savedMsg:"✓ Saved!",
+      noProgram:"Select a day and add exercises", myCustomEx:"My Custom Exercises",
+      customExDesc:"Rename or delete", edit:"Edit", cancel:"Cancel",
+      changeUsername:"Username", changeUsernameDesc:"Change your display name",
+      theme:"Theme", themeDesc:"Interface color", light:"Light", dark:"Dark",
+      language:"Language", langDesc:"App language",
+      deleteAccount:"Delete Account", deleteAccountDesc:"Permanently delete all your data.",
+      deleteConfirm:"Type \"DELETE\" to confirm:", deleteType:"DELETE",
+      deleteBtn:"Permanently Delete", deleting:"Deleting...", back:"← Back",
+      newPassword:"New Password", newPasswordRepeat:"Repeat Password",
+    }
+  };
+
+  function formatDate(dateStr, lang) {
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString(lang==="tr"?"tr-TR":"en-US", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+  }
+
+  // ── STYLE HELPERS ──
+  function GlassCard({ th, children, style={}, className="" }) {
+    return (
+      <div className={`glass ${className}`} style={{
+        background: th.glass, border: `1px solid ${th.glassBorder}`,
+        boxShadow: th.glassShadow, borderRadius: 20, padding: "20px 22px",
+        width: "100%", boxSizing: "border-box", minWidth: 0,
+        ...style
+      }}>{children}</div>
+    );
+  }
+
+  function GlassInput({ th, style={}, ...props }) {
+    return (
+      <input {...props} style={{
+        background: th.inputBg, border: `1.5px solid ${th.inputBorder}`,
+        color: th.text, padding: "11px 14px", width: "100%",
+        maxWidth: "100%", boxSizing: "border-box", minWidth: 0,
+        fontSize: 15, borderRadius: 12, outline: "none",
+        backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+        transition: "border-color 0.2s, box-shadow 0.2s",
+        ...style
+      }}
+        onFocus={e=>{ e.target.style.borderColor=th.accent; e.target.style.boxShadow=`0 0 0 3px ${th.accentGlow}`; }}
+        onBlur={e=>{ e.target.style.borderColor=th.inputBorder; e.target.style.boxShadow="none"; }}
+      />
+    );
+  }
+
+  function GlassSelect({ th, style={}, children, ...props }) {
+    return (
+      <select {...props} style={{
+        background: th.inputBg, border: `1.5px solid ${th.inputBorder}`,
+        color: th.text, padding: "11px 14px", width: "100%",
+        maxWidth: "100%", boxSizing: "border-box", minWidth: 0,
+        fontSize: 15, borderRadius: 12, outline: "none",
+        backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+        transition: "border-color 0.2s", appearance: "none",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23999' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center",
+        paddingRight: 36,
+        ...style
+      }}
+        onFocus={e=>{ e.target.style.borderColor=th.accent; }}
+        onBlur={e=>{ e.target.style.borderColor=th.inputBorder; }}
+      >{children}</select>
+    );
+  }
+
+  function Label({ th, children }) {
+    return <label style={{ display:"block", color:th.textMuted, fontSize:10, fontWeight:700, letterSpacing:1.5, marginBottom:8, textTransform:"uppercase" }}>{children}</label>;
+  }
+
+  function PrimaryBtn({ th, children, style={}, ...props }) {
+    return (
+      <button {...props} className="btn-primary" style={{
+        background: th.accent, border: "none", color: "#fff",
+        padding: "14px", width: "100%", cursor: props.disabled?"not-allowed":"pointer",
+        fontSize: 15, fontWeight: 700, borderRadius: 14,
+        boxShadow: `0 4px 16px ${th.accentGlow}`,
+        transition: "all 0.2s", ...style
+      }}>{children}</button>
+    );
+  }
+
+  // ── BACKGROUND ORBS ──
+  function BgOrbs({ th }) {
+    return (
+      <>
+        <div className="orb" style={{ width:400, height:400, top:-100, right:-100, background:th.orb1, filter:"blur(80px)" }} />
+        <div className="orb" style={{ width:300, height:300, bottom:"20%", left:-80, background:th.orb2, filter:"blur(70px)" }} />
+        <div className="orb" style={{ width:250, height:250, bottom:"-5%", right:"20%", background:th.orb3, filter:"blur(60px)" }} />
+      </>
+    );
+  }
+
+  // ── RESET PASSWORD ──
+  function ResetPasswordScreen({ onDone, th, t }) {
+    const [password, setPassword] = useState("");
+    const [password2, setPassword2] = useState("");
+    const [msg, setMsg] = useState({ text:"", ok:false });
+    const [loading, setLoading] = useState(false);
+
+    async function handleReset() {
+      if (!password || password.length < 6) { setMsg({ text:t.atLeast6, ok:false }); return; }
+      if (password !== password2) { setMsg({ text:t.passwordsMismatch, ok:false }); return; }
+      setLoading(true);
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) { setMsg({ text:error.message, ok:false }); setLoading(false); return; }
+      setMsg({ text:t.resetDone, ok:true });
+      setTimeout(() => { window.location.hash = ""; onDone(); }, 1500);
+      setLoading(false);
+    }
+
+    if (mode==="privacy") return <PrivacyPolicyScreen th={th} t={t} lang={lang} onBack={()=>setMode("login")} />;
+    if (mode==="terms") return <TermsScreen th={th} t={t} lang={lang} onBack={()=>setMode("login")} />;
+
+    return (
+      <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24, background:th.bgGrad, position:"relative", overflow:"hidden" }}>
+        <BgOrbs th={th} />
+        <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:380 }}>
+          <div style={{ textAlign:"center", marginBottom:40 }}>
+            <h1 style={{ fontSize:36, fontWeight:700, color:th.text, letterSpacing:-1 }}>Iron <span style={{ color:th.accent }}>Log</span></h1>
+          </div>
+          <GlassCard th={th}>
+            <h3 style={{ fontWeight:700, fontSize:20, color:th.text, marginBottom:6 }}>{t.setNewPassword}</h3>
+            <p style={{ color:th.textSec, fontSize:13, marginBottom:24 }}>{t.atLeast6}</p>
+            <div style={{ marginBottom:16 }}>
+              <Label th={th}>{t.newPassword}</Label>
+              <GlassInput th={th} type="password" placeholder={t.passwordPh} value={password} onChange={e=>setPassword(e.target.value)} />
+            </div>
+            <div style={{ marginBottom:24 }}>
+              <Label th={th}>{t.newPasswordRepeat}</Label>
+              <GlassInput th={th} type="password" placeholder={t.passwordPh} value={password2} onChange={e=>setPassword2(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleReset()} />
+            </div>
+            {msg.text && <p style={{ color:msg.ok?th.green:th.accent, fontSize:13, marginBottom:16, fontWeight:500 }}>{msg.text}</p>}
+            <PrimaryBtn th={th} onClick={handleReset} disabled={loading} style={{ opacity:loading?0.7:1 }}>{loading?"...":t.updatePassword}</PrimaryBtn>
+          </GlassCard>
+        </div>
+      </div>
+    );
+  }
+
+  // ── AUTH ──
+  function AuthScreen({ th, t, lang, setLang }) {
+    const [mode, setMode] = useState("login");
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [password2, setPassword2] = useState("");
+    const [msg, setMsg] = useState({ text:"", ok:false });
+    const [loading, setLoading] = useState(false);
+
+    async function handleLogin() {
+      if (!email || !password) return;
+      setLoading(true); setMsg({ text:"", ok:false });
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) setMsg({ text:t.loginError, ok:false });
+      setLoading(false);
+    }
+    async function handleSignup() {
+      const u = username.trim();
+      if (!u || !email || !password || password.length<6) { setMsg({ text:t.fillAll, ok:false }); return; }
+      if (password !== password2) { setMsg({ text:t.passwordsMismatch, ok:false }); return; }
+      setLoading(true); setMsg({ text:"", ok:false });
+      const { error } = await sb.auth.signUp({ email, password, options:{ data:{ username:u } } });
+      if (error) setMsg({ text:error.message, ok:false });
+      else setMsg({ text:t.accountCreated, ok:true });
+      setLoading(false);
+    }
+    async function handleForgot() {
+      if (!email) return;
+      setLoading(true); setMsg({ text:"", ok:false });
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+      if (error) setMsg({ text:error.message, ok:false });
+      else setMsg({ text:t.resetSent, ok:true });
+      setLoading(false);
+    }
+
+    if (mode==="privacy") return <PrivacyPolicyScreen th={th} t={t} lang={lang} onBack={()=>setMode("login")} />;
+    if (mode==="terms") return <TermsScreen th={th} t={t} lang={lang} onBack={()=>setMode("login")} />;
+
+    return (
+      <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:24, background:th.bgGrad, position:"relative", overflow:"hidden" }}>
+        <BgOrbs th={th} />
+        <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:380 }}>
+          <div style={{ textAlign:"center", marginBottom:40 }}>
+            <h1 style={{ fontSize:40, fontWeight:700, color:th.text, letterSpacing:-1.5, marginBottom:6 }}>Iron <span style={{ color:th.accent }}>Log</span></h1>
+            <p style={{ color:th.textSec, fontSize:11, letterSpacing:3, fontWeight:500 }}>{t.appSub}</p>
+          </div>
+
+          {mode==="forgot" ? (
+            <GlassCard th={th}>
+              <button onClick={()=>setMode("login")} style={{ background:"none", border:"none", color:th.textSec, fontSize:13, cursor:"pointer", marginBottom:20, padding:0 }}>{t.back}</button>
+              <h3 style={{ fontWeight:700, fontSize:18, color:th.text, marginBottom:20 }}>{t.forgotPassword}</h3>
+              <Label th={th}>{t.email}</Label>
+              <GlassInput th={th} type="email" placeholder={t.emailPh} value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleForgot()} style={{ marginBottom:20 }} />
+              {msg.text && <p style={{ color:msg.ok?th.green:th.accent, fontSize:13, marginBottom:16, fontWeight:500 }}>{msg.text}</p>}
+              <PrimaryBtn th={th} onClick={handleForgot} disabled={loading}>{loading?"...":t.sendLink}</PrimaryBtn>
+            </GlassCard>
+          ) : (
+            <GlassCard th={th}>
+              {/* Tab switcher */}
+              <div style={{ display:"flex", background:th.pillBg, borderRadius:12, padding:3, marginBottom:28 }}>
+                {[["login",t.login],["signup",t.signup]].map(([m,lb])=>(
+                  <button key={m} onClick={()=>{ setMode(m); setMsg({text:"",ok:false}); }} style={{ flex:1, background:mode===m?th.glassHeavy:"transparent", border:`1px solid ${mode===m?th.glassHeavyBorder:"transparent"}`, color:mode===m?th.text:th.textSec, fontSize:13, fontWeight:mode===m?700:500, padding:"9px", cursor:"pointer", borderRadius:10, backdropFilter:mode===m?"blur(12px)":"none", WebkitBackdropFilter:mode===m?"blur(12px)":"none", transition:"all 0.2s", boxShadow:mode===m?th.glassShadow:"none" }}>{lb}</button>
+                ))}
+              </div>
+
+              {mode==="signup" && (
+                <div style={{ marginBottom:14 }}>
+                  <Label th={th}>{t.username}</Label>
+                  <GlassInput th={th} type="text" placeholder={t.usernamePh} value={username} onChange={e=>setUsername(e.target.value)} />
+                </div>
+              )}
+              <div style={{ marginBottom:14 }}>
+                <Label th={th}>{t.email}</Label>
+                <GlassInput th={th} type="email" placeholder={t.emailPh} value={email} onChange={e=>setEmail(e.target.value)} />
+              </div>
+              <div style={{ marginBottom:mode==="signup"?14:8 }}>
+                <Label th={th}>{t.password}</Label>
+                <GlassInput th={th} type="password" placeholder={t.passwordPh} value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&mode==="login"&&handleLogin()} />
+              </div>
+              {mode==="signup" && (
+                <div style={{ marginBottom:8 }}>
+                  <Label th={th}>{t.passwordRepeat}</Label>
+                  <GlassInput th={th} type="password" placeholder={t.passwordPh} value={password2} onChange={e=>setPassword2(e.target.value)} />
+                </div>
+              )}
+              {mode==="login" && (
+                <div style={{ textAlign:"right", marginBottom:20 }}>
+                  <button onClick={()=>{ setMode("forgot"); setMsg({text:"",ok:false}); }} style={{ background:"none", border:"none", color:th.textSec, fontSize:12, cursor:"pointer", padding:0 }}>{t.forgotPassword}</button>
+                </div>
+              )}
+              {msg.text && <p style={{ color:msg.ok?th.green:th.accent, fontSize:13, marginBottom:16, lineHeight:1.5, fontWeight:500 }}>{msg.text}</p>}
+              <PrimaryBtn th={th} onClick={mode==="login"?handleLogin:handleSignup} disabled={loading} style={{ marginTop:mode==="login"?0:10, opacity:loading?0.7:1 }}>
+                {loading?"...":mode==="login"?t.login:t.signup}
+              </PrimaryBtn>
+            </GlassCard>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── PROGRAMS VIEW ──
+  function ProgramsView({ th, t, onUseProgram }) {
+    const [expandedDay, setExpandedDay] = useState(null);
+    const prog = GURAY_PROGRAM_FULL;
+
+    const focusColor = (focus) => {
+      if (focus.includes("Göğüs")) return "#E84430";
+      if (focus.includes("Sırt")) return "#3B82F6";
+      if (focus.includes("Bacak")) return "#10B981";
+      return th.accent;
+    };
+
+    return (
+      <div style={{ maxWidth:520 }}>
+        {/* Program header card */}
+        <div className="glass" style={{
+          background: `linear-gradient(135deg, ${th.accentBg}, ${th.glass})`,
+          border:`1px solid ${th.accentBorder}`,
+          borderRadius:20, padding:"22px",
+          backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
+          boxShadow:th.glassShadow, marginBottom:14
+        }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
+            <div>
+              <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>HAZIR PROGRAM</p>
+              <h2 style={{ color:th.text, fontSize:20, fontWeight:700, letterSpacing:-0.5, marginBottom:4 }}>{prog.meta.name}</h2>
+              <p style={{ color:th.textSec, fontSize:13 }}>{prog.meta.split}</p>
+            </div>
+            <div style={{ background:th.accent, borderRadius:12, padding:"8px 14px", textAlign:"center", flexShrink:0, boxShadow:`0 4px 12px ${th.accentGlow}` }}>
+              <p style={{ color:"#fff", fontSize:22, fontWeight:700, lineHeight:1 }}>{prog.meta.days}</p>
+              <p style={{ color:"rgba(255,255,255,0.7)", fontSize:10, fontWeight:600 }}>GÜN</p>
+            </div>
+          </div>
+
+          {/* Day pills */}
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
+            {prog.days.map((d,i)=>(
+              <button key={i} onClick={()=>setExpandedDay(expandedDay===i?null:i)} style={{
+                background: expandedDay===i ? th.accent : th.pillBg,
+                border:`1px solid ${expandedDay===i?th.accent:th.divider}`,
+                color: expandedDay===i ? "#fff" : th.text,
+                padding:"6px 14px", cursor:"pointer", borderRadius:20,
+                fontSize:12, fontWeight:expandedDay===i?700:500,
+                transition:"all 0.2s",
+                boxShadow: expandedDay===i?`0 3px 10px ${th.accentGlow}`:"none",
+                backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)",
+              }}>
+                {d.day.charAt(0)+d.day.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={()=>onUseProgram()} className="btn-primary" style={{
+            background:th.accent, border:"none", color:"#fff",
+            padding:"12px", width:"100%", cursor:"pointer",
+            fontSize:14, fontWeight:700, borderRadius:12,
+            boxShadow:`0 4px 14px ${th.accentGlow}`
+          }}>
+            Bu Programı Kullan
+          </button>
+        </div>
+
+        {/* Day detail cards */}
+        {expandedDay !== null && (() => {
+          const d = prog.days[expandedDay];
+          const col = focusColor(d.focus);
+          return (
+            <div className="glass fade-up" style={{
+              background:th.glass, border:`1px solid ${th.glassBorder}`,
+              borderRadius:20, overflow:"hidden",
+              backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)",
+              boxShadow:th.glassShadow, marginBottom:14
+            }}>
+              {/* Day header */}
+              <div style={{ background:`linear-gradient(135deg, ${col}18, ${col}08)`, borderBottom:`1px solid ${th.divider}`, padding:"16px 20px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                  <div>
+                    <p style={{ color:col, fontSize:11, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:4 }}>{d.day}</p>
+                    <p style={{ color:th.text, fontSize:16, fontWeight:600 }}>{d.focus}</p>
+                  </div>
+                  <span style={{ background:`${col}20`, color:col, fontSize:12, fontWeight:700, padding:"4px 12px", borderRadius:20 }}>
+                    {d.exercises.length} hareket
+                  </span>
+                </div>
+              </div>
+
+              {/* Exercises */}
+              {d.exercises.map((ex,i)=>(
+                <div key={i} style={{
+                  display:"flex", justifyContent:"space-between", alignItems:"center",
+                  padding:"13px 20px",
+                  borderBottom: i<d.exercises.length-1?`1px solid ${th.divider}`:"none",
+                  background: i%2===0?"transparent":th.pillBg,
+                }}>
+                  <div style={{ flex:1, paddingRight:12 }}>
+                    <p style={{ color:th.text, fontSize:14, fontWeight:500, marginBottom: ex.note?3:0 }}>{ex.name}</p>
+                    {ex.note && <span style={{ background:`${col}15`, color:col, fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:20, letterSpacing:0.5 }}>{ex.note}</span>}
+                  </div>
+                  <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
+                    <span style={{ background:th.tagBg, border:`1px solid ${th.tagBorder}`, color:th.text, fontSize:12, fontWeight:700, padding:"4px 10px", borderRadius:20, whiteSpace:"nowrap" }}>
+                      {ex.sets}×{ex.reps}
+                    </span>
+                    <span style={{ background:ex.intensity==="Failure"?`${col}15`:th.accentBg, border:`1px solid ${ex.intensity==="Failure"?`${col}30`:th.accentBorder}`, color:ex.intensity==="Failure"?col:th.accent, fontSize:11, fontWeight:600, padding:"4px 10px", borderRadius:20, whiteSpace:"nowrap" }}>
+                      {ex.intensity}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {/* Note if any */}
+            </div>
+          );
+        })()}
+
+        {/* Bottom note */}
+        <div className="glass" style={{
+          background:th.pillBg, border:`1px solid ${th.divider}`,
+          borderRadius:14, padding:"12px 16px",
+          backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)"
+        }}>
+          <p style={{ color:th.textSec, fontSize:12, fontWeight:500 }}>{prog.meta.note}</p>
+        <div style={{ textAlign:"center", marginTop:20, display:"flex", justifyContent:"center", gap:16 }}>
+            <button onClick={()=>setMode("privacy")} style={{ background:"none", border:"none", color:th.textMuted, fontSize:12, cursor:"pointer", padding:0, textDecoration:"underline" }}>{lang==="tr"?"Gizlilik Politikası":"Privacy Policy"}</button>
+            <button onClick={()=>setMode("terms")} style={{ background:"none", border:"none", color:th.textMuted, fontSize:12, cursor:"pointer", padding:0, textDecoration:"underline" }}>{lang==="tr"?"Kullanım Şartları":"Terms of Use"}</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── PRIVACY POLICY ──
+  function PrivacyPolicyScreen({ th, t, lang, onBack }) {
+    return (
+      <div style={{ minHeight:"100vh", background:th.bgGrad, position:"relative", overflow:"hidden" }}>
+        <BgOrbs th={th} />
+        <div style={{ position:"relative", zIndex:1, maxWidth:680, margin:"0 auto", padding:"32px 20px 60px" }}>
+          <button onClick={onBack} style={{ background:"none", border:"none", color:th.textSec, fontSize:14, cursor:"pointer", marginBottom:24, padding:0, display:"flex", alignItems:"center", gap:6 }}>← {lang==="tr"?"Geri":"Back"}</button>
+          <div className="glass" style={{ background:th.glass, border:`1px solid ${th.glassBorder}`, borderRadius:20, padding:"28px 28px", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", boxShadow:th.glassShadow }}>
+            <h1 style={{ color:th.text, fontSize:24, fontWeight:700, marginBottom:6 }}>{lang==="tr"?"Gizlilik Politikası":"Privacy Policy"}</h1>
+            <p style={{ color:th.textMuted, fontSize:12, marginBottom:28 }}>{lang==="tr"?"Son güncelleme: Mayıs 2026":"Last updated: May 2026"}</p>
+
+            {(lang==="tr" ? [
+              ["Topladığımız Veriler", "Iron Log uygulaması; kullanıcı adınızı, e-posta adresinizi, antrenman kayıtlarınızı (tarih, egzersiz, set, tekrar, RIR bilgileri) ve kişisel antrenman programınızı toplar. Bu veriler yalnızca uygulamanın işlevselliği için kullanılır."],
+              ["Verilerin Kullanımı", "Topladığımız veriler yalnızca size hizmet sunmak amacıyla kullanılır. Antrenman geçmişiniz, ilerlemenizi takip etmenize yardımcı olur. Verileriniz üçüncü taraflarla paylaşılmaz, satılmaz veya pazarlama amacıyla kullanılmaz."],
+              ["Veri Güvenliği", "Verileriniz Supabase altyapısı üzerinde güvenli şekilde saklanır. Supabase, endüstri standardı güvenlik protokollerini kullanır. Şifreleriniz hash'lenerek saklanır, düz metin olarak tutulmaz."],
+              ["Hesap Silme", "Ayarlar bölümünden hesabınızı ve tüm verilerinizi kalıcı olarak silebilirsiniz. Bu işlem geri alınamaz."],
+              ["Çerezler", "Bu uygulama çerez kullanmaz. Tema ve dil tercihleri cihazınızın yerel depolama alanında (localStorage) saklanır."],
+              ["İletişim", "Gizlilik konularında sorularınız için: ironlog.app@gmail.com"],
+            ] : [
+              ["Data We Collect", "Iron Log collects your username, email address, workout logs (date, exercise, sets, reps, RIR), and your personal training program. This data is used solely to provide app functionality."],
+              ["Use of Data", "Collected data is used only to serve you. Your workout history helps you track progress. Your data is never shared with third parties, sold, or used for marketing."],
+              ["Data Security", "Your data is securely stored on Supabase infrastructure, which uses industry-standard security protocols. Passwords are hashed and never stored in plain text."],
+              ["Account Deletion", "You can permanently delete your account and all associated data from the Settings section. This action is irreversible."],
+              ["Cookies", "This app does not use cookies. Theme and language preferences are stored in your device's local storage (localStorage)."],
+              ["Contact", "For privacy inquiries: ironlog.app@gmail.com"],
+            ]).map(([title, body], i) => (
+              <div key={i} style={{ marginBottom:24 }}>
+                <h3 style={{ color:th.text, fontSize:15, fontWeight:700, marginBottom:8 }}>{title}</h3>
+                <p style={{ color:th.textSec, fontSize:14, lineHeight:1.7 }}>{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── TERMS OF USE ──
+  function TermsScreen({ th, t, lang, onBack }) {
+    return (
+      <div style={{ minHeight:"100vh", background:th.bgGrad, position:"relative", overflow:"hidden" }}>
+        <BgOrbs th={th} />
+        <div style={{ position:"relative", zIndex:1, maxWidth:680, margin:"0 auto", padding:"32px 20px 60px" }}>
+          <button onClick={onBack} style={{ background:"none", border:"none", color:th.textSec, fontSize:14, cursor:"pointer", marginBottom:24, padding:0 }}>← {lang==="tr"?"Geri":"Back"}</button>
+          <div className="glass" style={{ background:th.glass, border:`1px solid ${th.glassBorder}`, borderRadius:20, padding:"28px 28px", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", boxShadow:th.glassShadow }}>
+            <h1 style={{ color:th.text, fontSize:24, fontWeight:700, marginBottom:6 }}>{lang==="tr"?"Kullanım Şartları":"Terms of Use"}</h1>
+            <p style={{ color:th.textMuted, fontSize:12, marginBottom:28 }}>{lang==="tr"?"Son güncelleme: Mayıs 2026":"Last updated: May 2026"}</p>
+
+            {(lang==="tr" ? [
+              ["Kabul", "Iron Log uygulamasını kullanarak bu kullanım şartlarını kabul etmiş olursunuz. Kabul etmiyorsanız uygulamayı kullanmayınız."],
+              ["Hizmet", "Iron Log, kişisel antrenman takibi için tasarlanmış bir mobil uygulamadır. Uygulama "olduğu gibi" sunulmaktadır."],
+              ["Kullanıcı Sorumluluğu", "Hesabınızın güvenliğinden siz sorumlusunuz. Şifrenizi kimseyle paylaşmayınız. Uygulama üzerinden yasadışı içerik paylaşmak yasaktır."],
+              ["Sağlık Uyarısı", "Iron Log bir fitness takip aracıdır, tıbbi tavsiye vermez. Yeni bir egzersiz programına başlamadan önce doktorunuza danışınız. Yaralanmalardan uygulama sorumlu tutulamaz."],
+              ["Hizmet Kesintileri", "Bakım, teknik sorunlar veya öngörülemeyen durumlar nedeniyle hizmet geçici olarak kesintiye uğrayabilir."],
+              ["Değişiklikler", "Bu şartlar önceden bildirim yapılmaksızın güncellenebilir. Güncel şartlar her zaman uygulama içinden erişilebilir olacaktır."],
+              ["İletişim", "Sorularınız için: ironlog.app@gmail.com"],
+            ] : [
+              ["Acceptance", "By using Iron Log, you agree to these terms of use. If you do not agree, please do not use the app."],
+              ["Service", "Iron Log is a mobile application designed for personal workout tracking. The app is provided "as is"."],
+              ["User Responsibility", "You are responsible for your account security. Do not share your password. Sharing illegal content through the app is prohibited."],
+              ["Health Disclaimer", "Iron Log is a fitness tracking tool and does not provide medical advice. Consult your doctor before starting a new exercise program. The app is not liable for injuries."],
+              ["Service Interruptions", "The service may be temporarily unavailable due to maintenance, technical issues, or unforeseen circumstances."],
+              ["Changes", "These terms may be updated without prior notice. Updated terms will always be accessible within the app."],
+              ["Contact", "For inquiries: ironlog.app@gmail.com"],
+            ]).map(([title, body], i) => (
+              <div key={i} style={{ marginBottom:24 }}>
+                <h3 style={{ color:th.text, fontSize:15, fontWeight:700, marginBottom:8 }}>{title}</h3>
+                <p style={{ color:th.textSec, fontSize:14, lineHeight:1.7 }}>{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── PROGRAM VIEW ──
+  function ProgramView({ session, customExList, setCustomExList, userProgram, setUserProgram, th, t }) {
+    const [subTab, setSubTab] = useState("programs");
+    const [editProgram, setEditProgram] = useState(userProgram || {});
+    const [selectedDay, setSelectedDay] = useState("PAZARTESİ");
+    const [newExName, setNewExName] = useState("");
+    const [saveMsg, setSaveMsg] = useState("");
+    const [editingCustomEx, setEditingCustomEx] = useState(null);
+
+    useEffect(() => { setEditProgram(userProgram || {}); }, [userProgram]);
+
+    async function saveProgramToDB(prog) {
+      const { error } = await sb.from("user_programs").upsert({ user_id:session.user.id, program:prog }, { onConflict:"user_id" });
+      if (!error) { setUserProgram(prog); setSaveMsg(t.savedMsg); setTimeout(()=>setSaveMsg(""), 2000); }
+    }
+
+    function addExToDay() {
+      const name = newExName.trim();
+      if (!name) return;
+      const current = editProgram[selectedDay] || [];
+      if (current.includes(name)) { setNewExName(""); return; }
+      setEditProgram({ ...editProgram, [selectedDay]: [...current, name] });
+      setNewExName("");
+    }
+
+    function removeExFromDay(day, ex) {
+      const updated = { ...editProgram, [day]: (editProgram[day]||[]).filter(e=>e!==ex) };
+      if (updated[day].length === 0) delete updated[day];
+      setEditProgram(updated);
+    }
+
+    async function saveCustomExName() {
+      if (!editingCustomEx || !editingCustomEx.newName.trim()) return;
+      const newName = editingCustomEx.newName.trim();
+      const { error } = await sb.from("custom_exercises").update({ name:newName }).eq("user_id", session.user.id).eq("name", editingCustomEx.name);
+      if (!error) { setCustomExList(prev=>prev.map(e=>e.name===editingCustomEx.name?{...e,name:newName}:e)); setEditingCustomEx(null); }
+    }
+
+    async function deleteCustomEx(name) {
+      await sb.from("custom_exercises").delete().eq("user_id", session.user.id).eq("name", name);
+      setCustomExList(prev=>prev.filter(e=>e.name!==name));
+    }
+
+    const hasProgram = Object.keys(editProgram).length > 0;
+
+    async function handleUseGuray() {
+      setEditProgram(GURAY_PROGRAM);
+      await saveProgramToDB(GURAY_PROGRAM);
+      setSubTab("mine");
+    }
+
+    return (
+      <div style={{ maxWidth:520 }}>
+        {/* Sub tab switcher */}
+        <div style={{ display:"flex", background:th.pillBg, borderRadius:14, padding:3, marginBottom:16, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
+          {[["programs","Programlar"],["mine","Programım"]].map(([k,lb])=>(
+            <button key={k} onClick={()=>setSubTab(k)} style={{ flex:1, background:subTab===k?th.glass:"transparent", border:`1px solid ${subTab===k?th.glassBorder:"transparent"}`, color:subTab===k?th.text:th.textSec, fontSize:13, fontWeight:subTab===k?700:500, padding:"10px", cursor:"pointer", borderRadius:12, backdropFilter:subTab===k?"blur(12px)":"none", WebkitBackdropFilter:subTab===k?"blur(12px)":"none", transition:"all 0.2s", boxShadow:subTab===k?th.glassShadow:"none" }}>{lb}</button>
+          ))}
+        </div>
+
+        {subTab==="programs" && <ProgramsView th={th} t={t} onUseProgram={handleUseGuray} />}
+
+        {subTab==="mine" && <div>
+        <GlassCard th={th}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
+            <div>
+              <h3 style={{ fontWeight:700, fontSize:18, color:th.text, marginBottom:3 }}>{t.myProgram}</h3>
+              <p style={{ color:th.textSec, fontSize:13 }}>{t.programDesc}</p>
+            </div>
+            <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+              {saveMsg && <span style={{ color:th.green, fontSize:13, fontWeight:600 }}>{saveMsg}</span>}
+              {hasProgram && (
+                <button onClick={()=>saveProgramToDB(editProgram)} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 16px", cursor:"pointer", fontSize:13, fontWeight:600, borderRadius:12, boxShadow:`0 4px 12px ${th.accentGlow}` }}>{t.saveProgram}</button>
+              )}
+            </div>
+          </div>
+
+          <div style={{ background:th.accentBg, border:`1px solid ${th.accentBorder}`, borderRadius:14, padding:14, marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <div>
+              <p style={{ fontWeight:600, fontSize:14, color:th.text, marginBottom:2 }}>{t.gurayProgram}</p>
+              <p style={{ color:th.textSec, fontSize:12 }}>{t.gurayDesc}</p>
+            </div>
+            <button onClick={()=>{ setEditProgram(GURAY_PROGRAM); saveProgramToDB(GURAY_PROGRAM); }} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 16px", cursor:"pointer", fontSize:13, fontWeight:600, borderRadius:12, boxShadow:`0 4px 12px ${th.accentGlow}` }}>{t.use}</button>
+          </div>
+
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
+            <div style={{ flex:1, height:1, background:th.divider }} />
+            <span style={{ color:th.textMuted, fontSize:12 }}>{t.orManual}</span>
+            <div style={{ flex:1, height:1, background:th.divider }} />
+          </div>
+
+          <div style={{ marginBottom:12 }}>
+            <Label th={th}>{t.selectDay}</Label>
+            <GlassSelect th={th} value={selectedDay} onChange={e=>setSelectedDay(e.target.value)}>
+              {DAYS.filter(d=>d!=="DİĞER").map(d=><option key={d} value={d}>{d}</option>)}
+            </GlassSelect>
+          </div>
+          <div style={{ display:"flex", gap:8, marginBottom:20 }}>
+            <GlassInput th={th} type="text" placeholder={t.exPh} value={newExName} onChange={e=>setNewExName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addExToDay()} style={{ flex:1 }} />
+            <button onClick={addExToDay} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"0 18px", cursor:"pointer", borderRadius:12, fontSize:20, fontWeight:700, boxShadow:`0 4px 12px ${th.accentGlow}`, flexShrink:0 }}>+</button>
+          </div>
+
+          {hasProgram ? (
+            <div style={{ background:th.pillBg, borderRadius:14, padding:16, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
+              {DAYS.filter(d=>editProgram[d]?.length>0).map(day=>(
+                <div key={day} style={{ marginBottom:14 }}>
+                  <p style={{ color:th.accent, fontSize:10, fontWeight:700, letterSpacing:1.5, marginBottom:8, textTransform:"uppercase" }}>{day}</p>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                    {editProgram[day].map(ex=>(
+                      <span key={ex} style={{ background:th.tagBg, border:`1px solid ${th.tagBorder}`, padding:"5px 10px", fontSize:12, borderRadius:10, fontWeight:500, color:th.text, display:"flex", alignItems:"center", gap:6, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
+                        {ex}
+                        <button onClick={()=>removeExFromDay(day,ex)} style={{ background:"none", border:"none", color:th.textMuted, cursor:"pointer", fontSize:14, padding:0, lineHeight:1, transition:"color 0.2s" }}
+                          onMouseEnter={e=>e.target.style.color=th.accent} onMouseLeave={e=>e.target.style.color=th.textMuted}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ background:th.pillBg, borderRadius:14, padding:32, textAlign:"center", border:`1.5px dashed ${th.divider}` }}>
+              <p style={{ fontSize:36, marginBottom:8 }}>📋</p>
+              <p style={{ color:th.textMuted, fontSize:13 }}>{t.noProgram}</p>
+            </div>
+          )}
+        </GlassCard>
+
+        </div>}
+
+        {subTab==="mine" && customExList.length > 0 && (
+          <GlassCard th={th} style={{ marginTop:16 }}>
+            <h3 style={{ fontWeight:700, fontSize:16, color:th.text, marginBottom:4 }}>{t.myCustomEx}</h3>
+            <p style={{ color:th.textSec, fontSize:13, marginBottom:16 }}>{t.customExDesc}</p>
+            {customExList.map(ex=>(
+              <div key={ex.name} style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 0", borderBottom:`1px solid ${th.divider}` }}>
+                {editingCustomEx?.name===ex.name ? (
+                  <>
+                    <GlassInput th={th} value={editingCustomEx.newName} onChange={e=>setEditingCustomEx({...editingCustomEx,newName:e.target.value})} onKeyDown={e=>e.key==="Enter"&&saveCustomExName()} style={{ flex:1, padding:"8px 12px", fontSize:14 }} autoFocus />
+                    <button onClick={saveCustomExName} style={{ background:th.accent, border:"none", color:"#fff", padding:"8px 14px", cursor:"pointer", borderRadius:10, fontSize:13, fontWeight:600 }}>{t.save}</button>
+                    <button onClick={()=>setEditingCustomEx(null)} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"8px 12px", cursor:"pointer", borderRadius:10, fontSize:13 }}>{t.cancel}</button>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ flex:1 }}>
+                      <p style={{ fontWeight:500, fontSize:14, color:th.text }}>{ex.name}</p>
+                      <p style={{ color:th.textMuted, fontSize:11 }}>{ex.day}</p>
+                    </div>
+                    <button onClick={()=>setEditingCustomEx({name:ex.name,day:ex.day,newName:ex.name})} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, padding:"6px 12px", cursor:"pointer", borderRadius:10, fontSize:12, fontWeight:500, transition:"all 0.2s" }}
+                      onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textSec;}}>{t.edit}</button>
+                    <button onClick={()=>deleteCustomEx(ex.name)} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textMuted, padding:"6px 10px", cursor:"pointer", borderRadius:10, fontSize:14, transition:"all 0.2s" }}
+                      onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textMuted;}}>×</button>
+                  </>
+                )}
+              </div>
+            ))}
+          </GlassCard>
+        )}
+      </div>
+    );
+  }
+
+  // ── SETTINGS VIEW ──
+  function SettingsView({ session, themeName, setThemeName, lang, setLang, th, t }) {
+    const [newUsername, setNewUsername] = useState(session.user.user_metadata?.username || "");
+    const [usernameMsg, setUsernameMsg] = useState("");
+    const [deleteInput, setDeleteInput] = useState("");
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteMsg, setDeleteMsg] = useState("");
+
+    async function handleSaveUsername() {
+      const u = newUsername.trim();
+      if (!u) return;
+      const { error } = await sb.auth.updateUser({ data:{ username:u } });
+      if (!error) { setUsernameMsg("✓"); setTimeout(()=>setUsernameMsg(""), 2000); }
+    }
+
+    function handleTheme(val) { setThemeName(val); localStorage.setItem("ironlog-theme", val); }
+    function handleLang(val) { setLang(val); localStorage.setItem("ironlog-lang", val); }
+
+    async function handleDeleteAccount() {
+      if (deleteInput !== t.deleteType) return;
+      setDeleteLoading(true);
+      const { error } = await sb.rpc("delete_own_account");
+      if (error) { setDeleteMsg(error.message); setDeleteLoading(false); return; }
+      await sb.auth.signOut();
+    }
+
+    const sectionStyle = { marginBottom:14 };
+
+    return (
+      <div style={{ maxWidth:520 }}>
+        {/* Username */}
+        <GlassCard th={th} style={sectionStyle}>
+          <h3 style={{ fontWeight:700, fontSize:15, color:th.text, marginBottom:3 }}>{t.changeUsername}</h3>
+          <p style={{ color:th.textSec, fontSize:13, marginBottom:14 }}>{t.changeUsernameDesc}</p>
+          <div style={{ display:"flex", gap:8 }}>
+            <GlassInput th={th} type="text" value={newUsername} onChange={e=>setNewUsername(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSaveUsername()} style={{ flex:1 }} />
+            <button onClick={handleSaveUsername} className="btn-primary" style={{ background:th.accent, border:"none", color:usernameMsg?"#fff":"#fff", padding:"0 18px", cursor:"pointer", borderRadius:12, fontSize:14, fontWeight:600, boxShadow:`0 4px 12px ${th.accentGlow}`, flexShrink:0 }}>
+              {usernameMsg || t.save}
+            </button>
+          </div>
+        </GlassCard>
+
+        {/* Theme */}
+        <GlassCard th={th} style={sectionStyle}>
+          <h3 style={{ fontWeight:700, fontSize:15, color:th.text, marginBottom:3 }}>{t.theme}</h3>
+          <p style={{ color:th.textSec, fontSize:13, marginBottom:14 }}>{t.themeDesc}</p>
+          <div style={{ display:"flex", gap:8 }}>
+            {[["light","☀️ "+t.light],["dark","🌙 "+t.dark]].map(([val,lb])=>(
+              <button key={val} onClick={()=>handleTheme(val)} style={{ flex:1, background:themeName===val?th.accent:th.pillBg, border:`1.5px solid ${themeName===val?th.accent:th.divider}`, color:themeName===val?"#fff":th.text, padding:"12px", cursor:"pointer", borderRadius:12, fontSize:14, fontWeight:600, transition:"all 0.2s", boxShadow:themeName===val?`0 4px 12px ${th.accentGlow}`:"none" }}>{lb}</button>
+            ))}
+          </div>
+        </GlassCard>
+
+        {/* Language */}
+        <GlassCard th={th} style={sectionStyle}>
+          <h3 style={{ fontWeight:700, fontSize:15, color:th.text, marginBottom:3 }}>{t.language}</h3>
+          <p style={{ color:th.textSec, fontSize:13, marginBottom:14 }}>{t.langDesc}</p>
+          <div style={{ display:"flex", gap:8 }}>
+            {[["tr","🇹🇷 Türkçe"],["en","🇬🇧 English"]].map(([val,lb])=>(
+              <button key={val} onClick={()=>handleLang(val)} style={{ flex:1, background:lang===val?th.accent:th.pillBg, border:`1.5px solid ${lang===val?th.accent:th.divider}`, color:lang===val?"#fff":th.text, padding:"12px", cursor:"pointer", borderRadius:12, fontSize:14, fontWeight:600, transition:"all 0.2s", boxShadow:lang===val?`0 4px 12px ${th.accentGlow}`:"none" }}>{lb}</button>
+            ))}
+          </div>
+        </GlassCard>
+
+        {/* Delete Account */}
+        <GlassCard th={th} style={{ border:`1px solid ${th.dangerBorder}`, background:th.dangerBg }}>
+          <h3 style={{ fontWeight:700, fontSize:15, color:th.danger, marginBottom:3 }}>{t.deleteAccount}</h3>
+          <p style={{ color:th.textSec, fontSize:13, marginBottom:14 }}>{t.deleteAccountDesc}</p>
+          <p style={{ color:th.textSec, fontSize:13, marginBottom:10 }}>{t.deleteConfirm}</p>
+          <div style={{ display:"flex", gap:8 }}>
+            <GlassInput th={th} type="text" placeholder={t.deleteType} value={deleteInput} onChange={e=>setDeleteInput(e.target.value)} style={{ flex:1, borderColor: deleteInput===t.deleteType?th.danger:th.inputBorder }} />
+            <button onClick={handleDeleteAccount} disabled={deleteLoading||deleteInput!==t.deleteType} style={{ background:deleteInput===t.deleteType?th.danger:th.pillBg, border:"none", color:deleteInput===t.deleteType?"#fff":th.textMuted, padding:"0 16px", cursor:deleteInput===t.deleteType?"pointer":"not-allowed", borderRadius:12, fontSize:13, fontWeight:600, whiteSpace:"nowrap", opacity:deleteLoading?0.7:1, transition:"all 0.2s", flexShrink:0 }}>
+              {deleteLoading?t.deleting:t.deleteBtn}
+            </button>
+          </div>
+          {deleteMsg && <p style={{ color:th.danger, fontSize:13, marginTop:10 }}>{deleteMsg}</p>}
+        </GlassCard>
+      </div>
+    );
+  }
+
+  // ── MAIN APP ──
+  function App() {
+    const [session, setSession] = useState(null);
+    const [authChecked, setAuthChecked] = useState(false);
+    const [isRecovery, setIsRecovery] = useState(false);
+    const [logs, setLogs] = useState([]);
+    const [customExList, setCustomExList] = useState([]);
+    const [userProgram, setUserProgram] = useState(null);
+    const [view, setView] = useState("log");
+    const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+    const [programDay, setProgramDay] = useState("PAZARTESİ");
+    const [exercise, setExercise] = useState("");
+    const [newCustomEx, setNewCustomEx] = useState("");
+    const [customExDay, setCustomExDay] = useState("PAZARTESİ");
+    const [sets, setSets] = useState([{ weight:"", reps:"", rir:"" }]);
+    const [savedAnim, setSavedAnim] = useState(false);
+    const [expanded, setExpanded] = useState({});
+    const [filterEx, setFilterEx] = useState("all");
+    const [loading, setLoading] = useState(false);
+    const [themeName, setThemeName] = useState(()=>localStorage.getItem("ironlog-theme")||"light");
+    const [lang, setLang] = useState(()=>localStorage.getItem("ironlog-lang")||"tr");
+
+    const th = THEMES[themeName];
+    const t = LANGS[lang];
+
+    useEffect(() => {
+      document.body.style.background = th.bgGrad;
+      document.body.style.color = th.text;
+    }, [themeName]);
+
+    useEffect(() => {
+      sb.auth.getSession().then(({ data: { session } }) => { setSession(session); setAuthChecked(true); });
+      const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
+        setSession(s);
+        if (event === "PASSWORD_RECOVERY") setIsRecovery(true);
+      });
+      return () => subscription.unsubscribe();
+    }, []);
+
+    useEffect(() => {
+      if (session) { fetchLogs(); fetchCustomEx(); fetchUserProgram(); }
+      else { setLogs([]); setCustomExList([]); setUserProgram(null); }
+    }, [session]);
+
+    async function fetchLogs() {
+      const { data } = await sb.from("workouts").select("*").order("date",{ascending:false}).order("id",{ascending:true});
+      if (data) setLogs(data);
+    }
+    async function fetchCustomEx() {
+      const { data } = await sb.from("custom_exercises").select("*").order("created_at");
+      if (data) setCustomExList(data.map(d=>({ name:d.name, day:d.day||"DİĞER" })));
+    }
+    async function fetchUserProgram() {
+      const { data } = await sb.from("user_programs").select("program").eq("user_id",session.user.id).single();
+      if (data?.program) setUserProgram(data.program);
+    }
+
+    const activeProgram = userProgram || {};
+
+    function addSet() {
+      const lastWeight = sets[sets.length-1]?.weight || "";
+      setSets([...sets, { weight:lastWeight, reps:"", rir:"" }]);
+    }
+
+    async function handleSave() {
+      if (!exercise || exercise==="__custom__" || sets.some(s=>!s.weight||!s.reps)) return;
+      setLoading(true);
+      const { data, error } = await sb.from("workouts").insert({
+        user_id:session.user.id, date, exercise,
+        sets:sets.map(s=>({ weight:parseFloat(s.weight), reps:parseInt(s.reps), ...(s.rir!==""?{rir:parseInt(s.rir)}:{}) }))
+      }).select();
+      if (!error && data) {
+        setLogs(prev=>[...prev,data[0]].sort((a,b)=>b.date.localeCompare(a.date)||a.id-b.id));
+        setSavedAnim(true); setExercise(""); setSets([{weight:"",reps:"",rir:""}]);
+        setTimeout(()=>setSavedAnim(false), 2000);
+      }
+      setLoading(false);
+    }
+
+    async function deleteEntry(id) {
+      await sb.from("workouts").delete().eq("id",id);
+      setLogs(prev=>prev.filter(l=>l.id!==id));
+    }
+
+    async function addCustomExercise() {
+      const name = newCustomEx.trim();
+      if (!name || customExList.some(e=>e.name===name)) { setNewCustomEx(""); setExercise(""); return; }
+      const { error } = await sb.from("custom_exercises").insert({ user_id:session.user.id, name, day:customExDay });
+      if (!error) { setCustomExList(prev=>[...prev,{ name, day:customExDay }]); setExercise(name); setNewCustomEx(""); }
+    }
+
+    const byDate = logs.reduce((acc,l)=>{ if(!acc[l.date])acc[l.date]=[]; acc[l.date].push(l); return acc; }, {});
+    const sortedDates = Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+    const allExNames = [...new Set(logs.map(l=>l.exercise))];
+    const progressData = allExNames.map(name=>{
+      const entries = logs.filter(l=>l.exercise===name).sort((a,b)=>a.date.localeCompare(b.date));
+      const bests = entries.map(e=>({ date:e.date, best1RM:Math.max(...e.sets.map(s=>s.weight*(1+s.reps/30))) }));
+      return { name, bests };
+    });
+    const filteredProgress = filterEx==="all"?progressData:progressData.filter(p=>p.name===filterEx);
+    const username = session?.user.user_metadata?.username || session?.user.email?.split("@")[0];
+
+    const TABS = [
+      ["log", t.save, "💪"],
+      ["history", t.history, "📋"],
+      ["progress", t.progress, "📈"],
+      ["program", t.program, "🗓"],
+      ["settings", t.settings, "⚙️"],
+    ];
+
+    if (!authChecked) return (
+      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:th.bgGrad, position:"relative", overflow:"hidden" }}>
+        <BgOrbs th={th} />
+        <div style={{ position:"relative", zIndex:1, overflowX:"hidden", width:"100%" }}>
+          <h1 style={{ fontSize:36, fontWeight:700, color:th.text, letterSpacing:-1 }}>Iron <span style={{ color:th.accent }}>Log</span></h1>
+        </div>
+      </div>
+    );
+    if (isRecovery) return <ResetPasswordScreen onDone={()=>setIsRecovery(false)} th={th} t={t} />;
+    if (!session) return <AuthScreen th={th} t={t} lang={lang} setLang={setLang} />;
+
+    return (
+      <div style={{ minHeight:"100vh", background:th.bgGrad, position:"relative", overflow:"hidden" }}>
+        <BgOrbs th={th} />
+        <div style={{ position:"relative", zIndex:1, overflowX:"hidden", width:"100%" }}>
+          {/* Header */}
+          <div className="glass" style={{ background:th.headerGlass, borderBottom:`1px solid ${th.headerBorder}`, backdropFilter:"blur(30px)", WebkitBackdropFilter:"blur(30px)", position:"sticky", top:0, zIndex:100 }}>
+            <div style={{ maxWidth:720, margin:"0 auto", padding:"0 20px", height:56, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <h1 style={{ fontSize:20, fontWeight:700, color:th.text, letterSpacing:-0.5 }}>
+                Iron <span style={{ color:th.accent }}>Log</span>
+              </h1>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <span style={{ color:th.textSec, fontSize:13, fontWeight:500 }}>{username}</span>
+                <button onClick={()=>sb.auth.signOut()} style={{ background:th.pillBg, border:`1px solid ${th.divider}`, color:th.textSec, fontSize:12, fontWeight:600, padding:"5px 12px", cursor:"pointer", borderRadius:20, transition:"all 0.2s", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
+                  onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textSec;}}>{t.logout}</button>
+              </div>
+            </div>
+
+            {/* Tab bar */}
+            <div style={{ maxWidth:720, margin:"0 auto", padding:"0 16px", display:"flex" }}>
+              {TABS.map(([k,lb])=>(
+                <button key={k} onClick={()=>setView(k)} style={{ flex:1, background:"none", border:"none", color:view===k?th.navActive:th.navInactive, fontSize:11, fontWeight:view===k?700:500, padding:"10px 4px 12px", cursor:"pointer", borderBottom:`2px solid ${view===k?th.accent:"transparent"}`, transition:"all 0.2s", marginBottom:-1, letterSpacing:0.2, whiteSpace:"nowrap" }}>
+                  {lb}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div style={{ maxWidth:720, margin:"0 auto", padding:"24px 16px 40px", width:"100%", overflowX:"hidden" }} className="fade-up">
+
+            {/* ── KAYDET ── */}
+            {view==="log" && (
+              <div style={{ maxWidth:520, width:"100%" }}>
+                <GlassCard th={th} style={{ marginBottom:12 }}>
+                  <Label th={th}>{t.date}</Label>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={e=>setDate(e.target.value)}
+                    style={{
+                      display:"block",
+                      width:"100%",
+                      maxWidth:"100%",
+                      boxSizing:"border-box",
+                      background:th.inputBg,
+                      border:`1.5px solid ${th.inputBorder}`,
+                      color:th.text,
+                      padding:"11px 14px",
+                      fontSize:15,
+                      borderRadius:12,
+                      outline:"none",
+                      WebkitAppearance:"none",
+                      appearance:"none",
+                      margin:0,
+                    }}
+                    onFocus={e=>{ e.target.style.borderColor=th.accent; }}
+                    onBlur={e=>{ e.target.style.borderColor=th.inputBorder; }}
+                  />
+                </GlassCard>
+
+                <GlassCard th={th} style={{ marginBottom:12 }}>
+                  <Label th={th}>{t.trainingDay}</Label>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
+                    {DAYS.filter(d=>d!=="DİĞER").map(d=>{
+                      const hasExs = (activeProgram[d]||[]).length>0 || customExList.some(e=>e.day===d);
+                      if (!hasExs) return null;
+                      const isActive = programDay===d;
+                      return (
+                        <button key={d} onClick={()=>{ setProgramDay(d); setExercise(""); }} style={{ background:isActive?th.accent:th.pillBg, border:`1px solid ${isActive?th.accent:th.divider}`, color:isActive?"#fff":th.text, padding:"7px 13px", cursor:"pointer", borderRadius:20, fontSize:12, fontWeight:isActive?700:500, transition:"all 0.2s", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", boxShadow:isActive?`0 3px 10px ${th.accentGlow}`:"none" }}>
+                          {d.charAt(0)+d.slice(1).toLowerCase()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </GlassCard>
+
+                <GlassCard th={th} style={{ marginBottom:12 }}>
+                  <Label th={th}>{t.exercise}</Label>
+                  <GlassSelect th={th} value={exercise} onChange={e=>setExercise(e.target.value)}>
+                    <option value="">{t.selectEx}</option>
+                    {(() => {
+                      const dayEx = [...(activeProgram[programDay]||[]), ...customExList.filter(e=>e.day===programDay).map(e=>e.name)];
+                      const otherDays = DAYS.filter(d=>d!==programDay&&d!=="DİĞER");
+                      return <>
+                        {dayEx.length>0 && (
+                          <optgroup label={`📅 ${programDay.charAt(0)+programDay.slice(1).toLowerCase()} (${t.today})`}>
+                            {dayEx.map(ex=><option key={ex} value={ex}>{ex}</option>)}
+                          </optgroup>
+                        )}
+                        {otherDays.map(day=>{
+                          const all=[...(activeProgram[day]||[]),...customExList.filter(e=>e.day===day).map(e=>e.name)];
+                          if(!all.length) return null;
+                          return <optgroup key={day} label={day.charAt(0)+day.slice(1).toLowerCase()}>{all.map(ex=><option key={ex} value={ex}>{ex}</option>)}</optgroup>;
+                        })}
+                      </>;
+                    })()}
+                    <option value="__custom__">{t.addNewEx}</option>
+                  </GlassSelect>
+
+                  {/* Son seferki göstergesi */}
+                  {exercise && exercise !== "__custom__" && (() => {
+                    const prev = logs.filter(l=>l.exercise===exercise);
+                    if (!prev.length) return null;
+                    const last = prev[0];
+                    const daysDiff = Math.round((new Date() - new Date(last.date+"T12:00:00"))/(1000*60*60*24));
+                    const dayStr = daysDiff===0?(lang==="tr"?"bugün":"today"):daysDiff===1?(lang==="tr"?"dün":"yesterday"):(lang==="tr"?`${daysDiff} gün önce`:`${daysDiff} days ago`);
+                    return (
+                      <div style={{ marginTop:10, background:th.accentBg, border:`1px solid ${th.accentBorder}`, borderRadius:12, padding:"10px 14px" }}>
+                        <p style={{ color:th.textSec, fontSize:11, fontWeight:600, letterSpacing:1, textTransform:"uppercase", marginBottom:6 }}>{lang==="tr"?"Son Antrenman":"Last Session"} · {dayStr}</p>
+                        <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                          {last.sets.map((s,i)=>(
+                            <span key={i} style={{ background:th.tagBg, border:`1px solid ${th.tagBorder}`, padding:"3px 10px", fontSize:12, borderRadius:20, fontWeight:500, color:th.text }}>
+                              <span style={{ color:th.accent, fontWeight:700 }}>{s.weight}</span>
+                              <span style={{ color:th.textMuted }}> × </span>
+                              <span>{s.reps}</span>
+                              {s.rir!=null&&s.rir!==""&&<span style={{ color:th.textMuted }}> RIR{s.rir}</span>}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {exercise==="__custom__" && (
+                    <div style={{ marginTop:16 }}>
+                      <div style={{ marginBottom:12 }}>
+                        <Label th={th}>{t.whichDay}</Label>
+                        <GlassSelect th={th} value={customExDay} onChange={e=>setCustomExDay(e.target.value)}>
+                          {DAYS.map(d=><option key={d} value={d}>{d}</option>)}
+                        </GlassSelect>
+                      </div>
+                      <Label th={th}>{t.exName}</Label>
+                      <div style={{ display:"flex", gap:8 }}>
+                        <GlassInput th={th} type="text" placeholder={t.exNamePh} value={newCustomEx} onChange={e=>setNewCustomEx(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addCustomExercise()} style={{ flex:1 }} />
+                        <button onClick={addCustomExercise} className="btn-primary" style={{ background:th.accent, border:"none", color:"#fff", padding:"0 18px", cursor:"pointer", borderRadius:12, fontSize:20, fontWeight:700, boxShadow:`0 4px 12px ${th.accentGlow}`, flexShrink:0 }}>+</button>
+                      </div>
+                      <p style={{ color:th.textMuted, fontSize:12, marginTop:6 }}>{t.enterOrPlus}</p>
+                    </div>
+                  )}
+                </GlassCard>
+
+                <GlassCard th={th} style={{ marginBottom:16 }}>
+                  <Label th={th}>{t.sets}</Label>
+                  <div style={{ display:"grid", gridTemplateColumns:"26px 1fr 1fr 72px 22px", gap:6, paddingBottom:10, borderBottom:`1px solid ${th.divider}`, marginBottom:10 }}>
+                    {[t.setNum,t.kg,t.reps,t.rir,""].map((h,i)=><span key={i} style={{ color:th.textMuted, fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:0.5 }}>{h}</span>)}
+                  </div>
+                  {sets.map((s,i)=>(
+                    <div key={i} style={{ display:"grid", gridTemplateColumns:"26px 1fr 1fr 72px 22px", gap:6, marginBottom:8, alignItems:"center" }}>
+                      <span style={{ color:th.accent, fontWeight:700, fontSize:14 }}>{i+1}</span>
+                      <GlassInput th={th} type="number" placeholder="80" value={s.weight} onChange={e=>setSets(sets.map((x,idx)=>idx===i?{...x,weight:e.target.value}:x))} style={{ padding:"9px 10px" }} />
+                      <GlassInput th={th} type="number" placeholder="8" value={s.reps} onChange={e=>setSets(sets.map((x,idx)=>idx===i?{...x,reps:e.target.value}:x))} style={{ padding:"9px 10px" }} />
+                      <GlassInput th={th} type="number" placeholder="0-3" min="0" max="3" value={s.rir} onChange={e=>setSets(sets.map((x,idx)=>idx===i?{...x,rir:e.target.value}:x))} style={{ padding:"9px 10px" }} />
+                      {sets.length>1?<button onClick={()=>setSets(sets.filter((_,idx)=>idx!==i))} style={{ background:"none", border:"none", color:th.textMuted, cursor:"pointer", fontSize:18, padding:0, transition:"color 0.2s" }} onMouseEnter={e=>e.target.style.color=th.accent} onMouseLeave={e=>e.target.style.color=th.textMuted}>×</button>:<span/>}
+                    </div>
+                  ))}
+                  <button onClick={addSet} style={{ background:th.pillBg, border:`1.5px dashed ${th.divider}`, color:th.textMuted, padding:"9px", cursor:"pointer", fontSize:13, fontWeight:500, marginTop:4, width:"100%", borderRadius:12, transition:"all 0.2s", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
+                    onMouseEnter={e=>{e.target.style.borderColor=th.accent;e.target.style.color=th.accent;}} onMouseLeave={e=>{e.target.style.borderColor=th.divider;e.target.style.color=th.textMuted;}}>{t.addSet}</button>
+                </GlassCard>
+
+                <PrimaryBtn th={th} onClick={handleSave} disabled={loading} style={{ background:savedAnim?th.green:th.accent, boxShadow:savedAnim?`0 4px 16px ${th.greenBg}`:`0 4px 16px ${th.accentGlow}`, opacity:loading?0.7:1, fontSize:16 }}>
+                  {loading?t.saving:savedAnim?"✓ "+t.saved:t.save}
+                </PrimaryBtn>
+              </div>
+            )}
+
+            {/* ── GEÇMİŞ ── */}
+            {view==="history" && (
+              <div>
+                {sortedDates.length===0 ? (
+                  <div style={{ textAlign:"center", padding:80 }}>
+                    <div style={{ fontSize:48, marginBottom:16 }}>🏋️</div>
+                    <p style={{ color:th.textMuted, fontSize:14, fontWeight:500 }}>{t.noWorkouts}</p>
+                  </div>
+                ) : sortedDates.map(d=>{
+                  const open = !!expanded[d];
+                  return (
+                    <div key={d} style={{ marginBottom:10 }}>
+                      <button onClick={()=>setExpanded(p=>({...p,[d]:!p[d]}))} className="glass" style={{ width:"100%", background:open?th.glassHeavy:th.glass, border:`1px solid ${open?th.glassHeavyBorder:th.glassBorder}`, boxShadow:th.glassShadow, backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", padding:"16px 20px", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", borderRadius:open?"18px 18px 0 0":"18px", transition:"all 0.2s", textAlign:"left" }}>
+                        <div>
+                          <p style={{ color:th.text, fontWeight:600, fontSize:15, marginBottom:2 }}>{formatDate(d,lang)}</p>
+                          <p style={{ color:th.textSec, fontSize:12 }}>{byDate[d].length} {t.exercises}</p>
+                        </div>
+                        <span style={{ color:open?th.accent:th.textMuted, fontSize:22, display:"inline-block", transform:open?"rotate(90deg)":"rotate(0)", transition:"transform 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}>›</span>
+                      </button>
+                      {open && (
+                        <div className="glass" style={{ background:th.glassHeavy, backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", border:`1px solid ${th.glassBorder}`, borderTop:"none", borderRadius:"0 0 18px 18px" }}>
+                          {byDate[d].map((entry,idx)=>(
+                            <div key={entry.id} style={{ padding:"14px 20px", borderTop:idx>0?`1px solid ${th.divider}`:"none", display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                              <div>
+                                <p style={{ color:th.text, fontWeight:600, fontSize:14, marginBottom:10 }}>{entry.exercise}</p>
+                                <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                                  {entry.sets.map((s,i)=>(
+                                    <span key={i} style={{ background:th.tagBg, border:`1px solid ${th.tagBorder}`, padding:"5px 12px", fontSize:13, borderRadius:20, fontWeight:500, backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
+                                      <span style={{ color:th.accent, fontWeight:700 }}>{s.weight}</span>
+                                      <span style={{ color:th.textMuted }}> kg × </span>
+                                      <span style={{ color:th.text }}>{s.reps}</span>
+                                      {s.rir!=null&&s.rir!==""&&<span style={{ color:th.textMuted }}> · RIR {s.rir}</span>}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                              <button onClick={()=>deleteEntry(entry.id)} style={{ background:"none", border:"none", color:th.textMuted, cursor:"pointer", fontSize:20, padding:"2px 6px", transition:"color 0.2s" }} onMouseEnter={e=>e.target.style.color=th.accent} onMouseLeave={e=>e.target.style.color=th.textMuted}>×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ── İLERLEME ── */}
+            {view==="progress" && (
+              <div>
+                {allExNames.length===0 ? (
+                  <div style={{ textAlign:"center", padding:80 }}>
+                    <div style={{ fontSize:48, marginBottom:16 }}>📈</div>
+                    <p style={{ color:th.textMuted, fontSize:14, fontWeight:500 }}>{t.noData}</p>
+                  </div>
+                ) : (
+                  <>
+                    <GlassCard th={th} style={{ marginBottom:20 }}>
+                      <Label th={th}>{t.exercise}</Label>
+                      <GlassSelect th={th} value={filterEx} onChange={e=>setFilterEx(e.target.value)} style={{ maxWidth:400 }}>
+                        <option value="all">{t.allExercises}</option>
+                        {allExNames.map(n=><option key={n} value={n}>{n}</option>)}
+                      </GlassSelect>
+                    </GlassCard>
+                    {filteredProgress.map(({name,bests})=>{
+                      const maxB = Math.max(...bests.map(b=>b.best1RM));
+                      const latest = bests[bests.length-1]?.best1RM||0;
+                      const diff = latest-(bests[0]?.best1RM||0);
+                      return (
+                        <GlassCard key={name} th={th} style={{ marginBottom:14 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                            <p style={{ fontWeight:600, fontSize:15, color:th.text }}>{name}</p>
+                            {diff>0&&<span style={{ background:th.greenBg, color:th.green, fontSize:12, fontWeight:600, padding:"4px 12px", borderRadius:20 }}>+{diff.toFixed(1)} kg</span>}
+                          </div>
+                          <div style={{ display:"flex", alignItems:"flex-end", gap:4, height:60, marginBottom:10, background:th.barBg, borderRadius:12, padding:"10px 12px 0", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}>
+                            {bests.map((b,i)=>(
+                              <div key={i} title={`${formatDate(b.date,lang)}: ${b.best1RM.toFixed(1)}kg`} style={{ flex:1, background:i===bests.length-1?th.accent:th.divider, height:`${(b.best1RM/maxB)*100}%`, minHeight:4, borderRadius:"4px 4px 0 0", transition:"height 0.3s", boxShadow:i===bests.length-1?`0 2px 8px ${th.accentGlow}`:"none" }} />
+                            ))}
+                          </div>
+                          <div style={{ display:"flex", gap:24, paddingTop:14, borderTop:`1px solid ${th.divider}` }}>
+                            {[[t.bestRM,`${maxB.toFixed(1)} kg`,th.accent],[t.sessions,bests.length,th.text],[t.lastRM,`${latest.toFixed(1)} kg`,th.textSec]].map(([lb,val,col])=>(
+                              <div key={lb}>
+                                <p style={{ color:th.textMuted, fontSize:10, fontWeight:600, letterSpacing:0.5, textTransform:"uppercase", marginBottom:3 }}>{lb}</p>
+                                <p style={{ color:col, fontWeight:700, fontSize:18 }}>{val}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </GlassCard>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+            )}
+
+            {view==="program" && <ProgramView session={session} customExList={customExList} setCustomExList={setCustomExList} userProgram={userProgram} setUserProgram={setUserProgram} th={th} t={t} />}
+            {view==="settings" && <SettingsView session={session} themeName={themeName} setThemeName={setThemeName} lang={lang} setLang={setLang} th={th} t={t} />}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
